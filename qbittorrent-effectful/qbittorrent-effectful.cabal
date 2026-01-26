@@ -1,0 +1,53 @@
+cabal-version:   3.0
+name:            qbittorrent-effectful
+version:         0.1.0.0
+synopsis:        Effectful bindings for qbittorrent
+description:
+  Effectful effect and handlers for the qbittorrent library.
+  Provides automatic session management and retry logic.
+
+license:         MIT
+license-file:    LICENSE
+author:          birdgg
+maintainer:      birdgg
+category:        Network
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/birdgg/qbittorrent-hs.git
+
+library
+  exposed-modules:
+    Network.QBittorrent.Effectful
+
+  build-depends:
+    , aeson           >=2.1
+    , base            >=4.16 && <5
+    , effectful       >=2.0
+    , effectful-core  >=2.0
+    , effectful-th    >=1.0
+    , http-client     >=0.7
+    , http-types      >=0.12
+    , qbittorrent
+    , servant         >=0.20
+    , servant-client  >=0.20
+    , stm             >=2.5
+    , text            >=2.0
+
+  hs-source-dirs:   src
+  default-language: GHC2021
+  ghc-options:      -Wall
+  default-extensions:
+    DataKinds
+    DeriveAnyClass
+    DerivingStrategies
+    DuplicateRecordFields
+    GADTs
+    LambdaCase
+    NoFieldSelectors
+    OverloadedRecordDot
+    OverloadedStrings
+    TemplateHaskell
+    TypeFamilies
