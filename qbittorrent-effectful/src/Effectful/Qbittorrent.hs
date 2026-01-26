@@ -15,7 +15,7 @@ automatic session management.
 import Effectful
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.QBittorrent.Effectful
+import Effectful.Qbittorrent
 
 main :: IO ()
 main = do
@@ -32,7 +32,7 @@ main = do
       liftIO $ print torrents
 @
 -}
-module Network.QBittorrent.Effectful
+module Effectful.Qbittorrent
   ( -- * Effect
     QBittorrent (..)
 

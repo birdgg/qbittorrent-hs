@@ -20,7 +20,7 @@ source-repository head
 
 library
   exposed-modules:
-    Network.QBittorrent.Effectful
+    Effectful.Qbittorrent
 
   build-depends:
     , aeson           >=2.1

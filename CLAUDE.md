@@ -26,6 +26,10 @@ This is a Haskell client library for the qBittorrent Web API, organized as a mul
 - **qbittorrent**: Core library with pure servant-client bindings
 - **qbittorrent-effectful**: Effectful effect wrapper with automatic session management
 
+### Module Structure (qbittorrent-effectful)
+
+- `Effectful.Qbittorrent` - Effectful effect with auto session management
+
 ### Module Structure (qbittorrent)
 
 - `Network.QBittorrent` - Main entry point, re-exports Client and API

@@ -55,7 +55,7 @@ main = do
 
 ```haskell
 import Effectful
-import Network.QBittorrent.Effectful
+import Effectful.Qbittorrent
 
 main :: IO ()
 main = do
