@@ -2,6 +2,8 @@
 
 Haskell client library for the qBittorrent Web API.
 
+**Requires qBittorrent 5.0 or later.** This library does not support qBittorrent 4.x.
+
 ## Installation
 
 ```cabal
@@ -41,7 +43,7 @@ main = do
 ## API Coverage
 
 - Authentication (login/logout)
-- Torrent management (add, pause, resume, delete)
+- Torrent management (add, stop, start, delete)
 - Torrent info and files
 - Tags management
 - File/folder renaming

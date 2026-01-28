@@ -14,7 +14,9 @@ cabal repl
 
 ## Architecture
 
-This is a Haskell client library for the qBittorrent Web API using servant-client.
+This is a Haskell client library for the qBittorrent 5.0 Web API using servant-client.
+
+**Note**: This library only supports qBittorrent 5.0+. It does not provide backwards compatibility with qBittorrent 4.x API.
 
 ### Module Structure
 

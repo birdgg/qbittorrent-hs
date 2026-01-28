@@ -7,6 +7,19 @@ module Network.QBittorrent.Types.Torrent
     -- * Torrent Files
   , TorrentFile (..)
 
+    -- * Torrent Properties
+  , TorrentProperties (..)
+
+    -- * Torrent Trackers
+  , TorrentTracker (..)
+  , TrackerStatus (..)
+
+    -- * Torrent Web Seeds
+  , TorrentWebSeed (..)
+
+    -- * Categories
+  , Category (..)
+
     -- * Request Types
   , TorrentInfoRequest (..)
   , AddTorrentRequest (..)
@@ -64,7 +77,7 @@ isCompleted t =
   t.progress >= 1.0
     || t.state == "uploading"
     || t.state == "stalledUP"
-    || t.state == "pausedUP"
+    || t.state == "stoppedUP"
     || t.state == "forcedUP"
     || t.state == "queuedUP"
     || t.state == "checkingUP"
@@ -97,7 +110,7 @@ data AddTorrentRequest = AddTorrentRequest
   , category :: Maybe Text
   , tags :: Maybe Text
   , rename :: Maybe Text
-  , paused :: Maybe Bool
+  , stopped :: Maybe Bool
   }
   deriving stock (Show, Eq, Generic)
 
@@ -110,7 +123,7 @@ instance ToJSON AddTorrentRequest where
         , ("category" .=) <$> req.category
         , ("tags" .=) <$> req.tags
         , ("rename" .=) <$> req.rename
-        , ("paused" .=) <$> req.paused
+        , ("stopped" .=) <$> req.stopped
         ]
 
 instance ToForm AddTorrentRequest where
@@ -123,5 +136,149 @@ instance ToForm AddTorrentRequest where
           , fmap (\v -> ("category", [v])) req.category
           , fmap (\v -> ("tags", [v])) req.tags
           , fmap (\v -> ("rename", [v])) req.rename
-          , fmap (\v -> ("paused", [if v then "true" else "false"])) req.paused
+          , fmap (\v -> ("stopped", [if v then "true" else "false"])) req.stopped
           ]
+
+-- | Torrent general properties
+data TorrentProperties = TorrentProperties
+  { savePath :: Text
+  , creationDate :: Maybe Int64
+  , pieceSize :: Maybe Int64
+  , comment :: Maybe Text
+  , totalWasted :: Maybe Int64
+  , totalUploaded :: Maybe Int64
+  , totalUploadedSession :: Maybe Int64
+  , totalDownloaded :: Maybe Int64
+  , totalDownloadedSession :: Maybe Int64
+  , upLimit :: Maybe Int64
+  , dlLimit :: Maybe Int64
+  , timeElapsed :: Maybe Int64
+  , seedingTime :: Maybe Int64
+  , nbConnections :: Maybe Int
+  , nbConnectionsLimit :: Maybe Int
+  , shareRatio :: Maybe Double
+  , additionDate :: Maybe Int64
+  , completionDate :: Maybe Int64
+  , createdBy :: Maybe Text
+  , dlSpeedAvg :: Maybe Int64
+  , dlSpeed :: Maybe Int64
+  , eta :: Maybe Int64
+  , lastSeen :: Maybe Int64
+  , peers :: Maybe Int
+  , peersTotal :: Maybe Int
+  , piecesHave :: Maybe Int
+  , piecesNum :: Maybe Int
+  , reannounce :: Maybe Int64
+  , seeds :: Maybe Int
+  , seedsTotal :: Maybe Int
+  , totalSize :: Maybe Int64
+  , upSpeedAvg :: Maybe Int64
+  , upSpeed :: Maybe Int64
+  , isPrivate :: Maybe Bool  -- v5.0+ only
+  }
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON TorrentProperties where
+  parseJSON = withObject "TorrentProperties" $ \o ->
+    TorrentProperties
+      <$> o .: "save_path"
+      <*> o .:? "creation_date"
+      <*> o .:? "piece_size"
+      <*> o .:? "comment"
+      <*> o .:? "total_wasted"
+      <*> o .:? "total_uploaded"
+      <*> o .:? "total_uploaded_session"
+      <*> o .:? "total_downloaded"
+      <*> o .:? "total_downloaded_session"
+      <*> o .:? "up_limit"
+      <*> o .:? "dl_limit"
+      <*> o .:? "time_elapsed"
+      <*> o .:? "seeding_time"
+      <*> o .:? "nb_connections"
+      <*> o .:? "nb_connections_limit"
+      <*> o .:? "share_ratio"
+      <*> o .:? "addition_date"
+      <*> o .:? "completion_date"
+      <*> o .:? "created_by"
+      <*> o .:? "dl_speed_avg"
+      <*> o .:? "dl_speed"
+      <*> o .:? "eta"
+      <*> o .:? "last_seen"
+      <*> o .:? "peers"
+      <*> o .:? "peers_total"
+      <*> o .:? "pieces_have"
+      <*> o .:? "pieces_num"
+      <*> o .:? "reannounce"
+      <*> o .:? "seeds"
+      <*> o .:? "seeds_total"
+      <*> o .:? "total_size"
+      <*> o .:? "up_speed_avg"
+      <*> o .:? "up_speed"
+      <*> o .:? "is_private"
+
+-- | Tracker status
+data TrackerStatus
+  = TrackerDisabled       -- 0
+  | TrackerNotContacted   -- 1
+  | TrackerWorking        -- 2
+  | TrackerUpdating       -- 3
+  | TrackerNotWorking     -- 4
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON TrackerStatus where
+  parseJSON = withScientific "TrackerStatus" $ \n ->
+    case round n :: Int of
+      0 -> pure TrackerDisabled
+      1 -> pure TrackerNotContacted
+      2 -> pure TrackerWorking
+      3 -> pure TrackerUpdating
+      4 -> pure TrackerNotWorking
+      _ -> fail "Unknown tracker status"
+
+-- | Torrent tracker information
+data TorrentTracker = TorrentTracker
+  { url :: Text
+  , status :: TrackerStatus
+  , tier :: Maybe Int
+  , numPeers :: Maybe Int
+  , numSeeds :: Maybe Int
+  , numLeeches :: Maybe Int
+  , numDownloaded :: Maybe Int
+  , msg :: Maybe Text
+  }
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON TorrentTracker where
+  parseJSON = withObject "TorrentTracker" $ \o ->
+    TorrentTracker
+      <$> o .: "url"
+      <*> o .: "status"
+      <*> o .:? "tier"
+      <*> o .:? "num_peers"
+      <*> o .:? "num_seeds"
+      <*> o .:? "num_leeches"
+      <*> o .:? "num_downloaded"
+      <*> o .:? "msg"
+
+-- | Torrent web seed information
+newtype TorrentWebSeed = TorrentWebSeed
+  { url :: Text
+  }
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON TorrentWebSeed where
+  parseJSON = withObject "TorrentWebSeed" $ \o ->
+    TorrentWebSeed <$> o .: "url"
+
+-- | Category information
+data Category = Category
+  { name :: Text
+  , savePath :: Text
+  }
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON Category where
+  parseJSON = withObject "Category" $ \o ->
+    Category
+      <$> o .:? "name" .!= ""
+      <*> o .:? "savePath" .!= ""

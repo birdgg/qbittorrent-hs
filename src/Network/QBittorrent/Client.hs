@@ -36,14 +36,64 @@ module Network.QBittorrent.Client
   , addTorrent
   , getTorrents
   , getTorrentFiles
-  , pauseTorrents
-  , resumeTorrents
+  , stopTorrents
+  , startTorrents
   , deleteTorrents
   , addTags
   , removeTags
   , renameFile
   , renameFolder
   , setLocation
+
+    -- * Torrent Query Operations
+  , getTorrentProperties
+  , getTorrentTrackers
+  , getTorrentWebSeeds
+  , getTorrentPieceStates
+  , getTorrentPieceHashes
+  , exportTorrent
+
+    -- * Priority Management
+  , recheckTorrents
+  , reannounceTorrents
+  , increasePriority
+  , decreasePriority
+  , setTopPriority
+  , setBottomPriority
+
+    -- * Limit Settings
+  , setFilePriority
+  , setTorrentDownloadLimit
+  , setTorrentUploadLimit
+  , setTorrentShareLimits
+
+    -- * Behavior Settings
+  , setSuperSeeding
+  , setForceStart
+  , setAutoManagement
+  , toggleSequentialDownload
+  , toggleFirstLastPiecePriority
+
+    -- * Category Management
+  , getCategories
+  , setTorrentCategory
+  , createCategory
+  , editCategory
+  , removeCategories
+
+    -- * Tag Management
+  , getTags
+  , createGlobalTags
+  , deleteGlobalTags
+
+    -- * Tracker Management
+  , addTorrentTrackers
+  , editTorrentTracker
+  , removeTorrentTrackers
+  , addTorrentPeers
+
+    -- * Rename Operations
+  , renameTorrent
 
     -- * App Operations
   , getVersion
@@ -68,7 +118,9 @@ module Network.QBittorrent.Client
   ) where
 
 import Data.Aeson qualified as Aeson
+import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
+import Data.Map.Strict (Map)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
@@ -115,13 +167,13 @@ getTorrents mReq = case mReq of
 getTorrentFiles :: Text -> ClientM [TorrentFile]
 getTorrentFiles = qbClient.torrents.files
 
--- | Pause torrents by hash
-pauseTorrents :: [Text] -> ClientM NoContent
-pauseTorrents hashes = qbClient.torrents.pause (HashesForm $ T.intercalate "|" hashes)
+-- | Stop torrents by hash
+stopTorrents :: [Text] -> ClientM NoContent
+stopTorrents hashes = qbClient.torrents.stop (HashesForm $ T.intercalate "|" hashes)
 
--- | Resume torrents by hash
-resumeTorrents :: [Text] -> ClientM NoContent
-resumeTorrents hashes = qbClient.torrents.resume (HashesForm $ T.intercalate "|" hashes)
+-- | Start torrents by hash
+startTorrents :: [Text] -> ClientM NoContent
+startTorrents hashes = qbClient.torrents.start (HashesForm $ T.intercalate "|" hashes)
 
 -- | Delete torrents
 --
@@ -158,7 +210,7 @@ setLocation hashes location =
 
 -- | Get qBittorrent application version
 --
--- Returns version string like "v4.6.2"
+-- Returns version string like "v5.0.0"
 getVersion :: ClientM Text
 getVersion = qbClient.app.version
 
@@ -213,3 +265,198 @@ syncMaindata = qbClient.sync.maindata
 -- Pass 'Nothing' for rid on the first request to get full data.
 syncTorrentPeers :: Text -> Maybe Int64 -> ClientM SyncTorrentPeers
 syncTorrentPeers hash rid = qbClient.sync.torrentPeers hash rid
+
+-- -----------------------------------------------------------------------------
+-- Torrent Query Operations
+-- -----------------------------------------------------------------------------
+
+-- | Get general properties of a torrent
+getTorrentProperties :: Text -> ClientM TorrentProperties
+getTorrentProperties = qbClient.torrents.properties
+
+-- | Get trackers for a torrent
+getTorrentTrackers :: Text -> ClientM [TorrentTracker]
+getTorrentTrackers = qbClient.torrents.trackers
+
+-- | Get web seeds for a torrent
+getTorrentWebSeeds :: Text -> ClientM [TorrentWebSeed]
+getTorrentWebSeeds = qbClient.torrents.webseeds
+
+-- | Get piece states for a torrent
+--
+-- Returns a list of integers where:
+-- 0 = not downloaded, 1 = downloading, 2 = downloaded
+getTorrentPieceStates :: Text -> ClientM [Int]
+getTorrentPieceStates = qbClient.torrents.pieceStates
+
+-- | Get piece hashes for a torrent
+getTorrentPieceHashes :: Text -> ClientM [Text]
+getTorrentPieceHashes = qbClient.torrents.pieceHashes
+
+-- | Export a torrent as .torrent file
+exportTorrent :: Text -> ClientM ByteString
+exportTorrent = qbClient.torrents.export
+
+-- -----------------------------------------------------------------------------
+-- Priority Management
+-- -----------------------------------------------------------------------------
+
+-- | Recheck torrents
+recheckTorrents :: [Text] -> ClientM NoContent
+recheckTorrents hashes = qbClient.torrents.recheck (HashesForm $ T.intercalate "|" hashes)
+
+-- | Reannounce torrents to trackers
+reannounceTorrents :: [Text] -> ClientM NoContent
+reannounceTorrents hashes = qbClient.torrents.reannounce (HashesForm $ T.intercalate "|" hashes)
+
+-- | Increase priority of torrents
+increasePriority :: [Text] -> ClientM NoContent
+increasePriority hashes = qbClient.torrents.increasePrio (HashesForm $ T.intercalate "|" hashes)
+
+-- | Decrease priority of torrents
+decreasePriority :: [Text] -> ClientM NoContent
+decreasePriority hashes = qbClient.torrents.decreasePrio (HashesForm $ T.intercalate "|" hashes)
+
+-- | Set torrents to maximum priority
+setTopPriority :: [Text] -> ClientM NoContent
+setTopPriority hashes = qbClient.torrents.topPrio (HashesForm $ T.intercalate "|" hashes)
+
+-- | Set torrents to minimum priority
+setBottomPriority :: [Text] -> ClientM NoContent
+setBottomPriority hashes = qbClient.torrents.bottomPrio (HashesForm $ T.intercalate "|" hashes)
+
+-- -----------------------------------------------------------------------------
+-- Limit Settings
+-- -----------------------------------------------------------------------------
+
+-- | Set file priority within a torrent
+--
+-- Priority values: 0 = do not download, 1 = normal, 6 = high, 7 = maximal
+setFilePriority :: Text -> [Int] -> Int -> ClientM NoContent
+setFilePriority hash fileIds priority =
+  qbClient.torrents.setFilePrio (FilePrioForm hash (T.intercalate "|" $ map (T.pack . show) fileIds) priority)
+
+-- | Set download speed limit for torrents (bytes/second, -1 for unlimited)
+setTorrentDownloadLimit :: [Text] -> Int -> ClientM NoContent
+setTorrentDownloadLimit hashes limit =
+  qbClient.torrents.setDownloadLimit (LimitForm (T.intercalate "|" hashes) limit)
+
+-- | Set upload speed limit for torrents (bytes/second, -1 for unlimited)
+setTorrentUploadLimit :: [Text] -> Int -> ClientM NoContent
+setTorrentUploadLimit hashes limit =
+  qbClient.torrents.setUploadLimit (LimitForm (T.intercalate "|" hashes) limit)
+
+-- | Set share limits for torrents
+--
+-- ratioLimit: -2 = use global, -1 = unlimited, >= 0 = specific ratio
+-- seedingTimeLimit: -2 = use global, -1 = unlimited, >= 0 = minutes
+-- inactiveSeedingTimeLimit: -2 = use global, -1 = unlimited, >= 0 = minutes (v5.0+)
+setTorrentShareLimits :: [Text] -> Double -> Int -> Int -> ClientM NoContent
+setTorrentShareLimits hashes ratioLimit seedingTimeLimit inactiveSeedingTimeLimit =
+  qbClient.torrents.setShareLimits (ShareLimitsForm (T.intercalate "|" hashes) ratioLimit seedingTimeLimit inactiveSeedingTimeLimit)
+
+-- -----------------------------------------------------------------------------
+-- Behavior Settings
+-- -----------------------------------------------------------------------------
+
+-- | Enable/disable super seeding mode for torrents
+setSuperSeeding :: [Text] -> Bool -> ClientM NoContent
+setSuperSeeding hashes enabled =
+  qbClient.torrents.setSuperSeeding (BoolForm (T.intercalate "|" hashes) (if enabled then "true" else "false"))
+
+-- | Enable/disable force start for torrents
+setForceStart :: [Text] -> Bool -> ClientM NoContent
+setForceStart hashes enabled =
+  qbClient.torrents.setForceStart (BoolForm (T.intercalate "|" hashes) (if enabled then "true" else "false"))
+
+-- | Enable/disable automatic torrent management for torrents
+setAutoManagement :: [Text] -> Bool -> ClientM NoContent
+setAutoManagement hashes enabled =
+  qbClient.torrents.setAutoManagement (BoolForm (T.intercalate "|" hashes) (if enabled then "true" else "false"))
+
+-- | Toggle sequential download mode for torrents
+toggleSequentialDownload :: [Text] -> ClientM NoContent
+toggleSequentialDownload hashes = qbClient.torrents.toggleSequentialDownload (HashesForm $ T.intercalate "|" hashes)
+
+-- | Toggle first/last piece priority for torrents
+toggleFirstLastPiecePriority :: [Text] -> ClientM NoContent
+toggleFirstLastPiecePriority hashes = qbClient.torrents.toggleFirstLastPiecePrio (HashesForm $ T.intercalate "|" hashes)
+
+-- -----------------------------------------------------------------------------
+-- Category Management
+-- -----------------------------------------------------------------------------
+
+-- | Get all categories
+getCategories :: ClientM (Map Text Category)
+getCategories = qbClient.torrents.categories
+
+-- | Set category for torrents
+setTorrentCategory :: [Text] -> Text -> ClientM NoContent
+setTorrentCategory hashes cat =
+  qbClient.torrents.setCategory (CategoryForm (T.intercalate "|" hashes) cat)
+
+-- | Create a new category
+createCategory :: Text -> Text -> ClientM NoContent
+createCategory cat savePath =
+  qbClient.torrents.createCategory (CreateCategoryForm cat savePath)
+
+-- | Edit an existing category
+editCategory :: Text -> Text -> ClientM NoContent
+editCategory cat savePath =
+  qbClient.torrents.editCategory (CreateCategoryForm cat savePath)
+
+-- | Remove categories
+removeCategories :: [Text] -> ClientM NoContent
+removeCategories cats =
+  qbClient.torrents.removeCategories (CategoriesForm $ T.intercalate "\n" cats)
+
+-- -----------------------------------------------------------------------------
+-- Tag Management
+-- -----------------------------------------------------------------------------
+
+-- | Get all tags
+getTags :: ClientM [Text]
+getTags = qbClient.torrents.tags
+
+-- | Create new global tags
+createGlobalTags :: [Text] -> ClientM NoContent
+createGlobalTags tagsList =
+  qbClient.torrents.createTags (TagsOnlyForm $ T.intercalate "," tagsList)
+
+-- | Delete global tags
+deleteGlobalTags :: [Text] -> ClientM NoContent
+deleteGlobalTags tagsList =
+  qbClient.torrents.deleteTags (TagsOnlyForm $ T.intercalate "," tagsList)
+
+-- -----------------------------------------------------------------------------
+-- Tracker Management
+-- -----------------------------------------------------------------------------
+
+-- | Add trackers to a torrent
+addTorrentTrackers :: Text -> [Text] -> ClientM NoContent
+addTorrentTrackers hash urls =
+  qbClient.torrents.addTrackers (AddTrackersForm hash (T.intercalate "\n" urls))
+
+-- | Edit a tracker URL for a torrent
+editTorrentTracker :: Text -> Text -> Text -> ClientM NoContent
+editTorrentTracker hash origUrl newUrl =
+  qbClient.torrents.editTracker (EditTrackerForm hash origUrl newUrl)
+
+-- | Remove trackers from a torrent
+removeTorrentTrackers :: Text -> [Text] -> ClientM NoContent
+removeTorrentTrackers hash urls =
+  qbClient.torrents.removeTrackers (RemoveTrackersForm hash (T.intercalate "|" urls))
+
+-- | Add peers to torrents
+addTorrentPeers :: [Text] -> [Text] -> ClientM NoContent
+addTorrentPeers hashes peers =
+  qbClient.torrents.addPeers (AddPeersForm (T.intercalate "|" hashes) (T.intercalate "|" peers))
+
+-- -----------------------------------------------------------------------------
+-- Rename Operations
+-- -----------------------------------------------------------------------------
+
+-- | Rename a torrent
+renameTorrent :: Text -> Text -> ClientM NoContent
+renameTorrent hash newName =
+  qbClient.torrents.rename (RenameForm hash newName)
