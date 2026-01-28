@@ -181,12 +181,15 @@ shutdownApp = qbClient.app.shutdown
 
 -- | Get qBittorrent preferences
 --
--- Returns a JSON object containing all application preferences.
-getPreferences :: ClientM Aeson.Value
+-- Returns all application preferences.
+getPreferences :: ClientM Preferences
 getPreferences = qbClient.app.preferences
 
 -- | Set qBittorrent preferences
-setPreferences :: Aeson.Value -> ClientM NoContent
+--
+-- Only fields with 'Just' values will be updated.
+-- Use 'defaultPreferences' as a base and set only the fields you want to change.
+setPreferences :: Preferences -> ClientM NoContent
 setPreferences prefs =
   qbClient.app.setPreferences (PreferencesForm jsonStr)
   where

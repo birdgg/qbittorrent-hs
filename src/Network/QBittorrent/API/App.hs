@@ -3,10 +3,9 @@ module Network.QBittorrent.API.App
   ( AppRoutes (..)
   ) where
 
-import Data.Aeson qualified as Aeson
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Network.QBittorrent.Types.App (BuildInfo)
+import Network.QBittorrent.Types.App (BuildInfo, Preferences)
 import Network.QBittorrent.Types.Form (PreferencesForm)
 import Servant.API
 
@@ -31,7 +30,7 @@ data AppRoutes mode = AppRoutes
   , preferences
       :: mode
         :- "preferences"
-          :> Get '[JSON] Aeson.Value
+          :> Get '[JSON] Preferences
   , setPreferences
       :: mode
         :- "setPreferences"
