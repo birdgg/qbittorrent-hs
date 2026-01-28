@@ -56,6 +56,7 @@ module Network.QBittorrent.Client
 
     -- * Sync Operations
   , syncMaindata
+  , syncTorrentPeers
 
     -- * Re-exports
   , module Network.QBittorrent.Types
@@ -205,3 +206,10 @@ getDefaultSavePath = qbClient.app.defaultSavePath
 -- Pass the returned 'rid' for subsequent requests to get incremental updates.
 syncMaindata :: Int64 -> ClientM SyncMainData
 syncMaindata = qbClient.sync.maindata
+
+-- | Get torrent peers with incremental updates
+--
+-- Pass the torrent hash and optionally a rid from a previous response.
+-- Pass 'Nothing' for rid on the first request to get full data.
+syncTorrentPeers :: Text -> Maybe Int64 -> ClientM SyncTorrentPeers
+syncTorrentPeers hash rid = qbClient.sync.torrentPeers hash rid
