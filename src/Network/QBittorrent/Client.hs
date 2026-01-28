@@ -46,8 +46,13 @@ module Network.QBittorrent.Client
   , setLocation
 
     -- * App Operations
-  , getDefaultSavePath
+  , getVersion
+  , getWebapiVersion
+  , getBuildInfo
+  , shutdownApp
+  , getPreferences
   , setPreferences
+  , getDefaultSavePath
 
     -- * Sync Operations
   , syncMaindata
@@ -150,9 +155,35 @@ setLocation :: [Text] -> Text -> ClientM NoContent
 setLocation hashes location =
   qbClient.torrents.setLocation (SetLocationForm (T.intercalate "|" hashes) location)
 
--- | Get default save path
-getDefaultSavePath :: ClientM Text
-getDefaultSavePath = qbClient.app.defaultSavePath
+-- | Get qBittorrent application version
+--
+-- Returns version string like "v4.6.2"
+getVersion :: ClientM Text
+getVersion = qbClient.app.version
+
+-- | Get WebAPI version
+--
+-- Returns version string like "2.9.3"
+getWebapiVersion :: ClientM Text
+getWebapiVersion = qbClient.app.webapiVersion
+
+-- | Get build info
+--
+-- Returns build information including Qt, libtorrent, Boost, and OpenSSL versions.
+getBuildInfo :: ClientM BuildInfo
+getBuildInfo = qbClient.app.buildInfo
+
+-- | Shutdown qBittorrent application
+--
+-- WARNING: This will terminate the qBittorrent process.
+shutdownApp :: ClientM NoContent
+shutdownApp = qbClient.app.shutdown
+
+-- | Get qBittorrent preferences
+--
+-- Returns a JSON object containing all application preferences.
+getPreferences :: ClientM Aeson.Value
+getPreferences = qbClient.app.preferences
 
 -- | Set qBittorrent preferences
 setPreferences :: Aeson.Value -> ClientM NoContent
@@ -160,6 +191,10 @@ setPreferences prefs =
   qbClient.app.setPreferences (PreferencesForm jsonStr)
   where
     jsonStr = TL.toStrict $ TLE.decodeUtf8 $ Aeson.encode prefs
+
+-- | Get default save path
+getDefaultSavePath :: ClientM Text
+getDefaultSavePath = qbClient.app.defaultSavePath
 
 -- | Get sync maindata
 --

@@ -29,6 +29,7 @@ library
     Network.QBittorrent.Client
     Network.QBittorrent.Client.Auth
     Network.QBittorrent.Types
+    Network.QBittorrent.Types.App
     Network.QBittorrent.Types.Filter
     Network.QBittorrent.Types.Form
     Network.QBittorrent.Types.Sync

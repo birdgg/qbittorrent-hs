@@ -9,6 +9,7 @@ module Network.QBittorrent.Types
   , QBError (..)
 
     -- * Re-exports
+  , module Network.QBittorrent.Types.App
   , module Network.QBittorrent.Types.Filter
   , module Network.QBittorrent.Types.Form
   , module Network.QBittorrent.Types.Sync
@@ -17,6 +18,7 @@ module Network.QBittorrent.Types
 
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import Network.QBittorrent.Types.App
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
 import Network.QBittorrent.Types.Sync
