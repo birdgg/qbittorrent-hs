@@ -22,6 +22,10 @@ library
   exposed-modules:
     Network.QBittorrent
     Network.QBittorrent.API
+    Network.QBittorrent.API.App
+    Network.QBittorrent.API.Auth
+    Network.QBittorrent.API.Sync
+    Network.QBittorrent.API.Torrents
     Network.QBittorrent.Client
     Network.QBittorrent.Client.Auth
     Network.QBittorrent.Types
