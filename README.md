@@ -42,13 +42,114 @@ main = do
 
 ## API Coverage
 
-- Authentication (login/logout)
-- Torrent management (add, stop, start, delete)
-- Torrent info and files
-- Tags management
-- File/folder renaming
-- Location management
-- Sync API
+### Authentication API ✅ (2/2)
+
+| Endpoint | Status |
+|----------|--------|
+| `login` | ✅ |
+| `logout` | ✅ |
+
+### Application API ✅ (7/9)
+
+| Endpoint | Status |
+|----------|--------|
+| `version` | ✅ |
+| `webapiVersion` | ✅ |
+| `buildInfo` | ✅ |
+| `shutdown` | ✅ |
+| `preferences` | ✅ |
+| `setPreferences` | ✅ |
+| `defaultSavePath` | ✅ |
+| `networkInterfaceList` | ❌ |
+| `networkInterfaceAddressList` | ❌ |
+
+### Torrents API ✅ (44/47)
+
+| Endpoint | Status |
+|----------|--------|
+| `info` | ✅ |
+| `properties` | ✅ |
+| `trackers` | ✅ |
+| `webseeds` | ✅ |
+| `files` | ✅ |
+| `pieceStates` | ✅ |
+| `pieceHashes` | ✅ |
+| `add` | ✅ |
+| `stop` | ✅ |
+| `start` | ✅ |
+| `delete` | ✅ |
+| `recheck` | ✅ |
+| `reannounce` | ✅ |
+| `increasePrio` | ✅ |
+| `decreasePrio` | ✅ |
+| `topPrio` | ✅ |
+| `bottomPrio` | ✅ |
+| `setFilePrio` | ✅ |
+| `setDownloadLimit` | ✅ |
+| `setUploadLimit` | ✅ |
+| `setShareLimits` | ✅ |
+| `setSuperSeeding` | ✅ |
+| `setForceStart` | ✅ |
+| `setAutoManagement` | ✅ |
+| `toggleSequentialDownload` | ✅ |
+| `toggleFirstLastPiecePrio` | ✅ |
+| `setCategory` | ✅ |
+| `categories` | ✅ |
+| `createCategory` | ✅ |
+| `editCategory` | ✅ |
+| `removeCategories` | ✅ |
+| `tags` | ✅ |
+| `addTags` | ✅ |
+| `removeTags` | ✅ |
+| `createTags` | ✅ |
+| `deleteTags` | ✅ |
+| `addTrackers` | ✅ |
+| `editTracker` | ✅ |
+| `removeTrackers` | ✅ |
+| `addPeers` | ✅ |
+| `rename` | ✅ |
+| `renameFile` | ✅ |
+| `renameFolder` | ✅ |
+| `setLocation` | ✅ |
+| `export` | ✅ |
+| `count` | ❌ |
+| `downloadLimit` (get) | ❌ |
+| `uploadLimit` (get) | ❌ |
+
+### Sync API ✅ (2/2)
+
+| Endpoint | Status |
+|----------|--------|
+| `maindata` | ✅ |
+| `torrentPeers` | ✅ |
+
+### Log API ❌ (0/2)
+
+| Endpoint | Status |
+|----------|--------|
+| `main` | ❌ |
+| `peers` | ❌ |
+
+### Transfer API ❌ (0/7)
+
+| Endpoint | Status |
+|----------|--------|
+| `info` | ❌ |
+| `speedLimitsMode` | ❌ |
+| `toggleSpeedLimitsMode` | ❌ |
+| `downloadLimit` | ❌ |
+| `setDownloadLimit` | ❌ |
+| `uploadLimit` | ❌ |
+| `setUploadLimit` | ❌ |
+| `banPeers` | ❌ |
+
+### RSS API ❌
+
+Not implemented.
+
+### Search API ❌
+
+Not implemented.
 
 ## License
 
