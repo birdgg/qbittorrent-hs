@@ -32,9 +32,6 @@
 --
 -- qBittorrent uses session cookies for authentication. Use 'mkClientEnvWithCookies'
 -- to create a 'ClientEnv' that persists cookies across requests.
---
--- For automatic session management (auto-login, retry on auth failure),
--- see the @qbittorrent-effectful@ package.
 module Network.QBittorrent
   ( -- * Client
     module Network.QBittorrent.Client

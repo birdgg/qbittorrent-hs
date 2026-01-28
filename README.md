@@ -2,26 +2,13 @@
 
 Haskell client library for the qBittorrent Web API.
 
-## Packages
-
-- **qbittorrent**: Core API client with pure IO interface
-- **qbittorrent-effectful**: Effectful bindings with automatic session management
-
 ## Installation
 
 ```cabal
 build-depends: qbittorrent
 ```
 
-For effectful users:
-
-```cabal
-build-depends: qbittorrent-effectful
-```
-
 ## Quick Start
-
-### Pure IO
 
 ```haskell
 import Network.HTTP.Client (newManager)
@@ -49,24 +36,6 @@ main = do
   -- Get torrents
   torrents <- runClientM (getTorrents Nothing) env
   print torrents
-```
-
-### With Effectful
-
-```haskell
-import Effectful
-import Effectful.Qbittorrent
-
-main :: IO ()
-main = do
-  manager <- newManager tlsManagerSettings
-  let config = QBConfig { ... }
-
-  runEff
-    . runQBittorrent manager config
-    $ do
-      torrents <- getTorrents Nothing
-      liftIO $ print torrents
 ```
 
 ## API Coverage
