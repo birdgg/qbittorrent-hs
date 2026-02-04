@@ -16,11 +16,11 @@ This repository contains two packages:
 ## Installation
 
 ```cabal
--- Core library
+-- Core library (for ClientM or SimpleClient)
 build-depends: qbittorrent
 
--- With Effectful support
-build-depends: qbittorrent, effectful-qbittorrent
+-- With Effectful support (includes qbittorrent types)
+build-depends: effectful-qbittorrent
 ```
 
 ## Quick Start
