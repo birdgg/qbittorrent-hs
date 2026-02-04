@@ -14,8 +14,8 @@ category: Network
 build-type: Simple
 extra-doc-files: CHANGELOG.md
 tested-with:
-  GHC == 9.12.2,
-  GHC == 9.14.1
+  ghc ==9.12.2
+  ghc ==9.14.1
 
 source-repository head
   type: git
@@ -47,7 +47,7 @@ library
     base >=4.21 && <5,
     bytestring >=0.11,
     containers >=0.6,
-    http-api-data >=0.5,
+    http-api-data >=0.7,
     http-client >=0.7,
     http-client-tls >=0.3,
     http-media >=0.8,
@@ -57,7 +57,7 @@ library
     servant-client-core >=0.20,
     stm >=2.5,
     text >=2.0,
-    unordered-containers >=0.2
+    unordered-containers >=0.2,
 
   hs-source-dirs: src
   default-language: GHC2021
