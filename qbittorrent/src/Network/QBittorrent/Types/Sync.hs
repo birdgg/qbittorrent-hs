@@ -13,6 +13,7 @@ import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import Network.QBittorrent.Types.Torrent (TorrentState)
 
 -- | Category information
 data CategoryInfo = CategoryInfo
@@ -57,7 +58,7 @@ instance FromJSON SyncMainData where
 -- | Partial torrent info for sync API
 data SyncTorrentInfo = SyncTorrentInfo
   { name :: Maybe Text
-  , state :: Maybe Text
+  , state :: Maybe TorrentState
   , progress :: Maybe Double
   , savePath :: Maybe Text
   , size :: Maybe Int64

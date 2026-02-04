@@ -1,8 +1,10 @@
 -- | Torrent-related types for qBittorrent API
 module Network.QBittorrent.Types.Torrent
-  ( -- * Torrent Info
-    TorrentInfo (..)
-  , isCompleted
+  ( -- * Torrent State
+    TorrentState (..)
+
+    -- * Torrent Info
+  , TorrentInfo (..)
 
     -- * Torrent Files
   , TorrentFile (..)
@@ -48,7 +50,7 @@ data TorrentInfoRequest = TorrentInfoRequest
 data TorrentInfo = TorrentInfo
   { hash :: Text
   , name :: Text
-  , state :: Text
+  , state :: TorrentState
   , progress :: Double
   , savePath :: Text
   , size :: Int64
@@ -70,17 +72,6 @@ instance FromJSON TorrentInfo where
       <*> o .: "downloaded"
       <*> o .: "eta"
       <*> o .:? "tags" .!= ""
-
--- | Check if the torrent download is completed
-isCompleted :: TorrentInfo -> Bool
-isCompleted t =
-  t.progress >= 1.0
-    || t.state == "uploading"
-    || t.state == "stalledUP"
-    || t.state == "stoppedUP"
-    || t.state == "forcedUP"
-    || t.state == "queuedUP"
-    || t.state == "checkingUP"
 
 -- | File information within a torrent
 data TorrentFile = TorrentFile
@@ -282,3 +273,48 @@ instance FromJSON Category where
     Category
       <$> o .:? "name" .!= ""
       <*> o .:? "savePath" .!= ""
+
+-- | Torrent state from qBittorrent 5.0+ API
+data TorrentState
+  = StateError          -- ^ error
+  | MissingFiles        -- ^ missingFiles
+  | Uploading           -- ^ uploading
+  | PausedUP            -- ^ pausedUP
+  | QueuedUP            -- ^ queuedUP
+  | StalledUP           -- ^ stalledUP
+  | CheckingUP          -- ^ checkingUP
+  | ForcedUP            -- ^ forcedUP
+  | Allocating          -- ^ allocating
+  | Downloading         -- ^ downloading
+  | MetaDL              -- ^ metaDL
+  | PausedDL            -- ^ pausedDL
+  | QueuedDL            -- ^ queuedDL
+  | StalledDL           -- ^ stalledDL
+  | CheckingDL          -- ^ checkingDL
+  | ForcedDL            -- ^ forcedDL
+  | CheckingResumeData  -- ^ checkingResumeData
+  | Moving              -- ^ moving
+  | StateUnknown        -- ^ unknown / fallback
+  deriving stock (Show, Eq, Generic)
+
+instance FromJSON TorrentState where
+  parseJSON = withText "TorrentState" $ \case
+    "error"              -> pure StateError
+    "missingFiles"       -> pure MissingFiles
+    "uploading"          -> pure Uploading
+    "pausedUP"           -> pure PausedUP
+    "queuedUP"           -> pure QueuedUP
+    "stalledUP"          -> pure StalledUP
+    "checkingUP"         -> pure CheckingUP
+    "forcedUP"           -> pure ForcedUP
+    "allocating"         -> pure Allocating
+    "downloading"        -> pure Downloading
+    "metaDL"             -> pure MetaDL
+    "pausedDL"           -> pure PausedDL
+    "queuedDL"           -> pure QueuedDL
+    "stalledDL"          -> pure StalledDL
+    "checkingDL"         -> pure CheckingDL
+    "forcedDL"           -> pure ForcedDL
+    "checkingResumeData" -> pure CheckingResumeData
+    "moving"             -> pure Moving
+    _                    -> pure StateUnknown
