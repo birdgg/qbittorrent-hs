@@ -30,11 +30,11 @@ build-depends: qbittorrent, effectful-qbittorrent
 The simplest way to use the library. Provides a record-based API with `IO (Either QBError a)` return types and automatic session management:
 
 ```haskell
-import Network.QBittorrent.SimpleClient
+import Network.QBittorrent.SimpleClient qualified as QB
 
 main :: IO ()
 main = do
-  result <- newQBittorrentClient defaultConfig
+  result <- QB.newClient QB.defaultConfig
   case result of
     Left err -> print err
     Right client -> do
@@ -52,13 +52,13 @@ For larger applications, use `ReaderT` to pass the client through your app:
 
 ```haskell
 import Control.Monad.Reader
-import Network.QBittorrent.SimpleClient
+import Network.QBittorrent.SimpleClient qualified as QB
 
-type App a = ReaderT QBittorrentClient IO a
+type App a = ReaderT QB.Client IO a
 
-runApp :: QBConfig -> App a -> IO a
+runApp :: QB.QBConfig -> App a -> IO a
 runApp config action = do
-  Right client <- newQBittorrentClient config
+  Right client <- QB.newClient config
   runReaderT action client
 
 myApp :: App ()
@@ -69,7 +69,7 @@ myApp = do
     print torrents
 
 main :: IO ()
-main = runApp defaultConfig myApp
+main = runApp QB.defaultConfig myApp
 ```
 
 ### Advanced Usage (ClientM)
@@ -121,14 +121,14 @@ When connecting to multiple qBittorrent instances, share the HTTP manager for be
 ```haskell
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.QBittorrent.SimpleClient
+import Network.QBittorrent.SimpleClient qualified as QB
 
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
 
-  Right client1 <- newQBittorrentClientWith manager config1
-  Right client2 <- newQBittorrentClientWith manager config2
+  Right client1 <- QB.newClientWith manager config1
+  Right client2 <- QB.newClientWith manager config2
 
   -- Both clients share the same connection pool
   torrents1 <- client1.getTorrents Nothing

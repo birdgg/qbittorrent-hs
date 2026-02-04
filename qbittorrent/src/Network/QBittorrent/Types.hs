@@ -2,7 +2,6 @@
 module Network.QBittorrent.Types
   ( -- * Configuration
     QBConfig (..)
-  , Credentials (..)
   , defaultConfig
 
     -- * Errors
@@ -39,13 +38,6 @@ data QBConfig = QBConfig
   , username :: Text
   , password :: Text
   , useTLS :: Bool
-  }
-  deriving stock (Show, Eq, Generic)
-
--- | Authentication credentials
-data Credentials = Credentials
-  { username :: Text
-  , password :: Text
   }
   deriving stock (Show, Eq, Generic)
 

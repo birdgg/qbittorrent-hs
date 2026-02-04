@@ -7,12 +7,12 @@
 -- = Usage
 --
 -- @
--- import Network.QBittorrent.SimpleClient
+-- import Network.QBittorrent.SimpleClient qualified as QB
 --
 -- main :: IO ()
 -- main = do
 --   -- Create client (handles login automatically)
---   client <- newQBittorrentClient defaultConfig
+--   Right client <- QB.newClient defaultConfig
 --
 --   -- Use record fields directly
 --   torrents <- client.getTorrents Nothing
@@ -26,11 +26,11 @@
 -- @
 module Network.QBittorrent.SimpleClient
   ( -- * Client Record
-    QBittorrentClient (..)
+    Client (..)
 
     -- * Client Creation
-  , newQBittorrentClient
-  , newQBittorrentClientWith
+  , newClient
+  , newClientWith
 
     -- * Re-exports
   , module Network.QBittorrent.Types
@@ -49,7 +49,7 @@ import Servant.API (NoContent)
 --
 -- Each field is an IO action that returns @Either QBError a@.
 -- The client manages session cookies automatically.
-data QBittorrentClient = QBittorrentClient
+data Client = Client
   { -- | Get qBittorrent application version
     getVersion :: IO (Either QBError Text)
   , -- | Get WebAPI version
@@ -224,26 +224,26 @@ data QBittorrentClient = QBittorrentClient
 -- The session is maintained for the lifetime of the client.
 --
 -- @
--- client <- newQBittorrentClient defaultConfig
+-- client <- QB.newClient defaultConfig
 -- torrents <- client.getTorrents Nothing
 -- @
-newQBittorrentClient :: QBConfig -> IO (Either QBError QBittorrentClient)
-newQBittorrentClient config = do
+newClient :: QBConfig -> IO (Either QBError Client)
+newClient config = do
   qbClient <- QB.newClient config
-  loginAndMakeClient qbClient config
+  loginResult <- QB.runQB qbClient (QB.login config)
+  case loginResult of
+    Left err -> pure $ Left (clientErrorToQBError err)
+    Right response
+      | response == "Ok." -> pure $ Right (mkClient qbClient)
+      | otherwise -> pure $ Left (AuthError $ "Login failed: " <> response)
 
 -- | Create a new qBittorrent client with a provided HTTP manager
 --
 -- Use this when you want to share a manager across multiple clients
 -- or need custom manager settings.
-newQBittorrentClientWith :: Manager -> QBConfig -> IO (Either QBError QBittorrentClient)
-newQBittorrentClientWith manager config = do
+newClientWith :: Manager -> QBConfig -> IO (Either QBError Client)
+newClientWith manager config = do
   qbClient <- QB.newClientWith manager config
-  loginAndMakeClient qbClient config
-
--- | Internal: Attempt login and create client record
-loginAndMakeClient :: QB.QBClient -> QBConfig -> IO (Either QBError QBittorrentClient)
-loginAndMakeClient qbClient config = do
   loginResult <- QB.runQB qbClient (QB.login config)
   case loginResult of
     Left err -> pure $ Left (clientErrorToQBError err)
@@ -252,8 +252,8 @@ loginAndMakeClient qbClient config = do
       | otherwise -> pure $ Left (AuthError $ "Login failed: " <> response)
 
 -- | Internal: Create the client record from QBClient
-mkClient :: QB.QBClient -> QBittorrentClient
-mkClient qbc = QBittorrentClient
+mkClient :: QB.QBClient -> Client
+mkClient qbc = Client
   { -- App
     getVersion = run QB.getVersion
   , getWebapiVersion = run QB.getWebapiVersion
