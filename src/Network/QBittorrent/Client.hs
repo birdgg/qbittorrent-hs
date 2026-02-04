@@ -1,35 +1,35 @@
 -- | qBittorrent Web API client using servant-client
 --
--- This module provides ClientM functions for interacting with the qBittorrent Web API.
+-- This module provides functions for interacting with the qBittorrent Web API.
+-- Import qualified as @QB@ for a clean API:
 --
 -- = Usage
 --
 -- @
 -- import Network.HTTP.Client (newManager)
 -- import Network.HTTP.Client.TLS (tlsManagerSettings)
--- import Network.QBittorrent.Client
+-- import Network.QBittorrent.Client qualified as QB
 --
 -- main :: IO ()
 -- main = do
 --   manager <- newManager tlsManagerSettings
---   let config = defaultConfig { host = "localhost", port = 8080 }
---   client <- newClient manager config
+--   let config = QB.defaultConfig { QB.host = "localhost", QB.port = 8080 }
+--   client <- QB.newClient manager config
 --
 --   -- Login first
---   loginResult <- runQB client (login config)
+--   loginResult <- QB.runQB client (QB.login config)
 --   case loginResult of
 --     Right "Ok." -> do
 --       -- Get all torrents (session cookie is managed automatically)
---       torrents <- runQB client (getTorrents Nothing)
+--       torrents <- QB.runQB client (QB.getTorrents Nothing)
 --       print torrents
 --     _ -> putStrLn "Login failed"
 -- @
 module Network.QBittorrent.Client
-  ( -- * Auth Operations
+  ( -- * Record API
+    -- | Use record field accessors directly: @QB.login@, @QB.getTorrents@, etc.
     login
   , logout
-
-    -- * Torrent Operations
   , addTorrent
   , getTorrents
   , getTorrentFiles
@@ -41,58 +41,40 @@ module Network.QBittorrent.Client
   , renameFile
   , renameFolder
   , setLocation
-
-    -- * Torrent Query Operations
   , getTorrentProperties
   , getTorrentTrackers
   , getTorrentWebSeeds
   , getTorrentPieceStates
   , getTorrentPieceHashes
   , exportTorrent
-
-    -- * Priority Management
   , recheckTorrents
   , reannounceTorrents
   , increasePriority
   , decreasePriority
   , setTopPriority
   , setBottomPriority
-
-    -- * Limit Settings
   , setFilePriority
   , setTorrentDownloadLimit
   , setTorrentUploadLimit
   , setTorrentShareLimits
-
-    -- * Behavior Settings
   , setSuperSeeding
   , setForceStart
   , setAutoManagement
   , toggleSequentialDownload
   , toggleFirstLastPiecePriority
-
-    -- * Category Management
   , getCategories
   , setTorrentCategory
   , createCategory
   , editCategory
   , removeCategories
-
-    -- * Tag Management
   , getTags
   , createGlobalTags
   , deleteGlobalTags
-
-    -- * Tracker Management
   , addTorrentTrackers
   , editTorrentTracker
   , removeTorrentTrackers
   , addTorrentPeers
-
-    -- * Rename Operations
   , renameTorrent
-
-    -- * App Operations
   , getVersion
   , getWebapiVersion
   , getBuildInfo
@@ -100,8 +82,6 @@ module Network.QBittorrent.Client
   , getPreferences
   , setPreferences
   , getDefaultSavePath
-
-    -- * Sync Operations
   , syncMaindata
   , syncTorrentPeers
 
@@ -117,6 +97,7 @@ module Network.QBittorrent.Client
   , ClientError
   ) where
 
+import Control.Concurrent.STM (TVar, newTVarIO)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
@@ -125,16 +106,57 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLE
+import Network.HTTP.Client (CookieJar, Manager)
 import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), TorrentsRoutes (..), AppRoutes (..), SyncRoutes (..), mkBaseUrl)
-import Network.QBittorrent.Client.Auth
 import Network.QBittorrent.Types
+import Servant.Client qualified as Servant
 import Servant.API (NoContent)
-import Servant.Client (ClientError, ClientM)
+import Servant.Client (ClientEnv, ClientError, ClientM, runClientM)
 import Servant.Client.Generic (AsClientT, genericClient)
 
--- | Generated client functions record
+-- -----------------------------------------------------------------------------
+-- Client
+-- -----------------------------------------------------------------------------
+
+-- | qBittorrent client with automatic session management
+--
+-- The client maintains a cookie jar internally for session persistence.
+-- Create with 'newClient' and use with 'runQB'.
+data QBClient = QBClient
+  { clientEnv :: ClientEnv
+  , cookieJar :: TVar CookieJar
+  , config :: QBConfig
+  }
+
+-- | Create a new qBittorrent client
+--
+-- The cookie jar is created and managed internally.
+--
+-- @
+-- manager <- newManager tlsManagerSettings
+-- client <- newClient manager config
+-- result <- runQB client (login config)
+-- @
+newClient :: Manager -> QBConfig -> IO QBClient
+newClient manager cfg = do
+  jar <- newTVarIO mempty
+  let baseEnv = Servant.mkClientEnv manager (mkBaseUrl cfg)
+      env = baseEnv{Servant.cookieJar = Just jar}
+  pure QBClient{clientEnv = env, cookieJar = jar, config = cfg}
+
+-- | Run a qBittorrent API request
+--
+-- The session cookie is automatically maintained across requests.
+runQB :: QBClient -> ClientM a -> IO (Either ClientError a)
+runQB client action = runClientM action client.clientEnv
+
+-- | Internal generated client functions
 qbClient :: QBittorrentRoutes (AsClientT ClientM)
 qbClient = genericClient
+
+-- -----------------------------------------------------------------------------
+-- Auth Operations
+-- -----------------------------------------------------------------------------
 
 -- | Login to qBittorrent
 --
@@ -145,6 +167,10 @@ login cfg = qbClient.auth.login (LoginForm cfg.username cfg.password)
 -- | Logout from qBittorrent
 logout :: ClientM NoContent
 logout = qbClient.auth.logout
+
+-- -----------------------------------------------------------------------------
+-- Torrent Operations
+-- -----------------------------------------------------------------------------
 
 -- | Add torrent by URL or magnet link
 addTorrent :: AddTorrentRequest -> ClientM Text
@@ -179,9 +205,9 @@ startTorrents hashes = qbClient.torrents.start (HashesForm $ T.intercalate "|" h
 --
 -- Set 'deleteFiles' to 'True' to also delete downloaded files.
 deleteTorrents :: [Text] -> Bool -> ClientM NoContent
-deleteTorrents hashes deleteFiles =
+deleteTorrents hashes deleteFiles_ =
   qbClient.torrents.delete
-    (DeleteTorrentsForm (T.intercalate "|" hashes) (if deleteFiles then "true" else "false"))
+    (DeleteTorrentsForm (T.intercalate "|" hashes) (if deleteFiles_ then "true" else "false"))
 
 -- | Add tags to torrents
 addTags :: [Text] -> [Text] -> ClientM NoContent
@@ -207,64 +233,6 @@ renameFolder hash oldPath newPath =
 setLocation :: [Text] -> Text -> ClientM NoContent
 setLocation hashes location =
   qbClient.torrents.setLocation (SetLocationForm (T.intercalate "|" hashes) location)
-
--- | Get qBittorrent application version
---
--- Returns version string like "v5.0.0"
-getVersion :: ClientM Text
-getVersion = qbClient.app.version
-
--- | Get WebAPI version
---
--- Returns version string like "2.9.3"
-getWebapiVersion :: ClientM Text
-getWebapiVersion = qbClient.app.webapiVersion
-
--- | Get build info
---
--- Returns build information including Qt, libtorrent, Boost, and OpenSSL versions.
-getBuildInfo :: ClientM BuildInfo
-getBuildInfo = qbClient.app.buildInfo
-
--- | Shutdown qBittorrent application
---
--- WARNING: This will terminate the qBittorrent process.
-shutdownApp :: ClientM NoContent
-shutdownApp = qbClient.app.shutdown
-
--- | Get qBittorrent preferences
---
--- Returns all application preferences.
-getPreferences :: ClientM Preferences
-getPreferences = qbClient.app.preferences
-
--- | Set qBittorrent preferences
---
--- Only fields with 'Just' values will be updated.
--- Use 'defaultPreferences' as a base and set only the fields you want to change.
-setPreferences :: Preferences -> ClientM NoContent
-setPreferences prefs =
-  qbClient.app.setPreferences (PreferencesForm jsonStr)
-  where
-    jsonStr = TL.toStrict $ TLE.decodeUtf8 $ Aeson.encode prefs
-
--- | Get default save path
-getDefaultSavePath :: ClientM Text
-getDefaultSavePath = qbClient.app.defaultSavePath
-
--- | Get sync maindata
---
--- Pass 0 for the first request to get full data.
--- Pass the returned 'rid' for subsequent requests to get incremental updates.
-syncMaindata :: Int64 -> ClientM SyncMainData
-syncMaindata = qbClient.sync.maindata
-
--- | Get torrent peers with incremental updates
---
--- Pass the torrent hash and optionally a rid from a previous response.
--- Pass 'Nothing' for rid on the first request to get full data.
-syncTorrentPeers :: Text -> Maybe Int64 -> ClientM SyncTorrentPeers
-syncTorrentPeers hash rid = qbClient.sync.torrentPeers hash rid
 
 -- -----------------------------------------------------------------------------
 -- Torrent Query Operations
@@ -460,3 +428,69 @@ addTorrentPeers hashes peers =
 renameTorrent :: Text -> Text -> ClientM NoContent
 renameTorrent hash newName =
   qbClient.torrents.rename (RenameForm hash newName)
+
+-- -----------------------------------------------------------------------------
+-- App Operations
+-- -----------------------------------------------------------------------------
+
+-- | Get qBittorrent application version
+--
+-- Returns version string like "v5.0.0"
+getVersion :: ClientM Text
+getVersion = qbClient.app.version
+
+-- | Get WebAPI version
+--
+-- Returns version string like "2.9.3"
+getWebapiVersion :: ClientM Text
+getWebapiVersion = qbClient.app.webapiVersion
+
+-- | Get build info
+--
+-- Returns build information including Qt, libtorrent, Boost, and OpenSSL versions.
+getBuildInfo :: ClientM BuildInfo
+getBuildInfo = qbClient.app.buildInfo
+
+-- | Shutdown qBittorrent application
+--
+-- WARNING: This will terminate the qBittorrent process.
+shutdownApp :: ClientM NoContent
+shutdownApp = qbClient.app.shutdown
+
+-- | Get qBittorrent preferences
+--
+-- Returns all application preferences.
+getPreferences :: ClientM Preferences
+getPreferences = qbClient.app.preferences
+
+-- | Set qBittorrent preferences
+--
+-- Only fields with 'Just' values will be updated.
+-- Use 'defaultPreferences' as a base and set only the fields you want to change.
+setPreferences :: Preferences -> ClientM NoContent
+setPreferences prefs =
+  qbClient.app.setPreferences (PreferencesForm jsonStr)
+  where
+    jsonStr = TL.toStrict $ TLE.decodeUtf8 $ Aeson.encode prefs
+
+-- | Get default save path
+getDefaultSavePath :: ClientM Text
+getDefaultSavePath = qbClient.app.defaultSavePath
+
+-- -----------------------------------------------------------------------------
+-- Sync Operations
+-- -----------------------------------------------------------------------------
+
+-- | Get sync maindata
+--
+-- Pass 0 for the first request to get full data.
+-- Pass the returned 'rid' for subsequent requests to get incremental updates.
+syncMaindata :: Int64 -> ClientM SyncMainData
+syncMaindata = qbClient.sync.maindata
+
+-- | Get torrent peers with incremental updates
+--
+-- Pass the torrent hash and optionally a rid from a previous response.
+-- Pass 'Nothing' for rid on the first request to get full data.
+syncTorrentPeers :: Text -> Maybe Int64 -> ClientM SyncTorrentPeers
+syncTorrentPeers hash rid = qbClient.sync.torrentPeers hash rid

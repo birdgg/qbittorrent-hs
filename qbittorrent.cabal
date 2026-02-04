@@ -1,21 +1,24 @@
-cabal-version:   3.0
-name:            qbittorrent
-version:         0.1.0.0
-synopsis:        qBittorrent Web API client for Haskell
+cabal-version: 3.0
+name: qbittorrent
+version: 0.1.0.0
+synopsis: qBittorrent Web API client for Haskell
 description:
   A pure Haskell client library for the qBittorrent Web API.
   Provides type-safe API bindings using servant-client.
 
-license:         MIT
-license-file:    LICENSE
-author:          birdgg
-maintainer:      birdgg
-category:        Network
-build-type:      Simple
+license: MIT
+license-file: LICENSE
+author: birdgg
+maintainer: birdgg
+category: Network
+build-type: Simple
 extra-doc-files: CHANGELOG.md
+tested-with:
+  GHC == 9.12.2,
+  GHC == 9.14.1
 
 source-repository head
-  type:     git
+  type: git
   location: https://github.com/birdgg/qbittorrent-hs.git
 
 library
@@ -27,7 +30,6 @@ library
     Network.QBittorrent.API.Sync
     Network.QBittorrent.API.Torrents
     Network.QBittorrent.Client
-    Network.QBittorrent.Client.Auth
     Network.QBittorrent.Types
     Network.QBittorrent.Types.App
     Network.QBittorrent.Types.Filter
@@ -36,25 +38,25 @@ library
     Network.QBittorrent.Types.Torrent
 
   build-depends:
-    , aeson                 >=2.1
-    , base                  >=4.16 && <5
-    , bytestring            >=0.11
-    , containers            >=0.6
-    , http-api-data         >=0.5
-    , http-client           >=0.7
-    , http-client-tls       >=0.3
-    , http-media            >=0.8
-    , http-types            >=0.12
-    , servant               >=0.20
-    , servant-client        >=0.20
-    , servant-client-core   >=0.20
-    , stm                   >=2.5
-    , text                  >=2.0
-    , unordered-containers  >=0.2
+    aeson >=2.1,
+    base >=4.21 && <5,
+    bytestring >=0.11,
+    containers >=0.6,
+    http-api-data >=0.5,
+    http-client >=0.7,
+    http-client-tls >=0.3,
+    http-media >=0.8,
+    http-types >=0.12,
+    servant >=0.20,
+    servant-client >=0.20,
+    servant-client-core >=0.20,
+    stm >=2.5,
+    text >=2.0,
+    unordered-containers >=0.2
 
-  hs-source-dirs:   src
+  hs-source-dirs: src
   default-language: GHC2021
-  ghc-options:      -Wall
+  ghc-options: -Wall
   default-extensions:
     DataKinds
     DeriveAnyClass

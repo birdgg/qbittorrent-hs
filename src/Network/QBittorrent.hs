@@ -8,21 +8,21 @@
 -- @
 -- import Network.HTTP.Client (newManager)
 -- import Network.HTTP.Client.TLS (tlsManagerSettings)
--- import Network.QBittorrent
+-- import Network.QBittorrent qualified as QB
 --
 -- main :: IO ()
 -- main = do
 --   manager <- newManager tlsManagerSettings
---   client <- newClient manager defaultConfig
+--   client <- QB.newClient manager QB.defaultConfig
 --
 --   -- Login
---   result <- runQB client (login defaultConfig)
+--   result <- QB.runQB client (QB.login QB.defaultConfig)
 --   case result of
 --     Right "Ok." -> putStrLn "Logged in!"
 --     _ -> putStrLn "Login failed"
 --
 --   -- Get torrents (session cookie is managed automatically)
---   torrents <- runQB client (getTorrents Nothing)
+--   torrents <- QB.runQB client (QB.getTorrents Nothing)
 --   print torrents
 -- @
 --
