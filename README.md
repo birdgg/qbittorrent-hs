@@ -138,24 +138,35 @@ main = do
 
 ### With Effectful
 
-Use the `effectful-qbittorrent` package for effectful integration:
+Use the `effectful-qbittorrent` package for effectful integration. Errors are handled via the `Error QBError` effect, enabling clean do-notation without explicit `Either` handling:
 
 ```haskell
 import Effectful
 import Effectful.QBittorrent
-import Network.QBittorrent.Client (newClient)
 
 main :: IO ()
 main = do
   client <- newClient defaultConfig
 
-  result <- runEff . runQBittorrent client $ do
-    loginResult <- login defaultConfig
-    case loginResult of
-      Right "Ok." -> getTorrents Nothing
-      _ -> pure (Left $ error "Login failed")
+  result <- runEff . runErrorNoCallStack @QBError . runQBittorrent client $ do
+    login defaultConfig        -- Returns Text, throws on failure
+    getTorrents Nothing        -- Returns [TorrentInfo]
 
-  print result
+  case result of
+    Left err -> print err
+    Right torrents -> print torrents
+```
+
+For more control over error handling, use `catchError`:
+
+```haskell
+myApp :: (QBittorrent :> es, Error QBError :> es, IOE :> es) => Eff es [TorrentInfo]
+myApp = do
+  login defaultConfig `catchError` \_ err ->
+    case err of
+      AuthError _ -> login fallbackConfig  -- Retry with fallback
+      _           -> throwError err        -- Re-throw other errors
+  getTorrents Nothing
 ```
 
 ## API Coverage
