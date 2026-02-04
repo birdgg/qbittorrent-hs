@@ -1,37 +1,48 @@
 -- | Authentication helpers for qBittorrent client
 module Network.QBittorrent.Client.Auth
-  ( -- * Client Environment
-    mkClientEnv
-  , mkClientEnvWithCookies
+  ( -- * Client
+    QBClient (..)
+  , newClient
 
-    -- * Cookie Management
-  , newCookieJar
+    -- * Running Requests
+  , runQB
   ) where
 
 import Control.Concurrent.STM (TVar, newTVarIO)
 import Network.HTTP.Client (CookieJar, Manager)
 import Network.QBittorrent.API (mkBaseUrl)
 import Network.QBittorrent.Types (QBConfig)
-import Servant.Client (ClientEnv)
+import Servant.Client (ClientEnv, ClientError, ClientM, runClientM)
 import Servant.Client qualified as Servant
 
--- | Create a new empty cookie jar
-newCookieJar :: IO (TVar CookieJar)
-newCookieJar = newTVarIO mempty
-
--- | Create a ClientEnv without cookie persistence
+-- | qBittorrent client with automatic session management
 --
--- Note: This is suitable for single requests but not for session-based auth.
--- For qBittorrent, use 'mkClientEnvWithCookies' instead.
-mkClientEnv :: Manager -> QBConfig -> ClientEnv
-mkClientEnv manager config =
-  Servant.mkClientEnv manager (mkBaseUrl config)
+-- The client maintains a cookie jar internally for session persistence.
+-- Create with 'newClient' and use with 'runQB'.
+data QBClient = QBClient
+  { clientEnv :: ClientEnv
+  , cookieJar :: TVar CookieJar
+  , config :: QBConfig
+  }
 
--- | Create a ClientEnv with cookie persistence
+-- | Create a new qBittorrent client
 --
--- This is required for qBittorrent authentication, which uses session cookies (SID).
--- The cookie jar maintains session state across requests.
-mkClientEnvWithCookies :: Manager -> QBConfig -> TVar CookieJar -> ClientEnv
-mkClientEnvWithCookies manager config cookieJar =
-  let baseEnv = Servant.mkClientEnv manager (mkBaseUrl config)
-   in baseEnv{Servant.cookieJar = Just cookieJar}
+-- The cookie jar is created and managed internally.
+--
+-- @
+-- manager <- newManager tlsManagerSettings
+-- client <- newClient manager config
+-- result <- runQB client (login config)
+-- @
+newClient :: Manager -> QBConfig -> IO QBClient
+newClient manager cfg = do
+  jar <- newTVarIO mempty
+  let baseEnv = Servant.mkClientEnv manager (mkBaseUrl cfg)
+      env = baseEnv{Servant.cookieJar = Just jar}
+  pure QBClient{clientEnv = env, cookieJar = jar, config = cfg}
+
+-- | Run a qBittorrent API request
+--
+-- The session cookie is automatically maintained across requests.
+runQB :: QBClient -> ClientM a -> IO (Either ClientError a)
+runQB client action = runClientM action client.clientEnv

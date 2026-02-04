@@ -33,7 +33,7 @@ import GHC.Generics (Generic)
 import Network.QBittorrent.Types.Filter (TorrentFilter)
 import Web.FormUrlEncoded (Form (..), ToForm (..))
 
-import Data.HashMap.Strict qualified as HashMap
+import Data.Map.Strict qualified as Map
 
 -- | Request parameters for getting torrent list
 data TorrentInfoRequest = TorrentInfoRequest
@@ -129,7 +129,7 @@ instance ToJSON AddTorrentRequest where
 instance ToForm AddTorrentRequest where
   toForm req =
     Form $
-      HashMap.fromList $
+      Map.fromList $
         catMaybes
           [ fmap (\v -> ("urls", [v])) req.urls
           , fmap (\v -> ("savepath", [v])) req.savepath

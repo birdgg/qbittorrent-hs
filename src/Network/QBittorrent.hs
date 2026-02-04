@@ -13,25 +13,23 @@
 -- main :: IO ()
 -- main = do
 --   manager <- newManager tlsManagerSettings
---   cookieJar <- newCookieJar
---   let config = defaultConfig
---       env = mkClientEnvWithCookies manager config cookieJar
+--   client <- newClient manager defaultConfig
 --
 --   -- Login
---   result <- runClientM (login config) env
+--   result <- runQB client (login defaultConfig)
 --   case result of
 --     Right "Ok." -> putStrLn "Logged in!"
 --     _ -> putStrLn "Login failed"
 --
---   -- Get torrents
---   torrents <- runClientM (getTorrents Nothing) env
+--   -- Get torrents (session cookie is managed automatically)
+--   torrents <- runQB client (getTorrents Nothing)
 --   print torrents
 -- @
 --
 -- = Session Management
 --
--- qBittorrent uses session cookies for authentication. Use 'mkClientEnvWithCookies'
--- to create a 'ClientEnv' that persists cookies across requests.
+-- The 'QBClient' manages session cookies automatically. Create a client with
+-- 'newClient' and use 'runQB' to execute requests.
 module Network.QBittorrent
   ( -- * Client
     module Network.QBittorrent.Client

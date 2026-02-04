@@ -8,22 +8,19 @@
 -- import Network.HTTP.Client (newManager)
 -- import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- import Network.QBittorrent.Client
--- import Network.QBittorrent.Client.Auth
--- import Servant.Client (runClientM)
 --
 -- main :: IO ()
 -- main = do
 --   manager <- newManager tlsManagerSettings
---   cookieJar <- newCookieJar
 --   let config = defaultConfig { host = "localhost", port = 8080 }
---       env = mkClientEnvWithCookies manager config cookieJar
+--   client <- newClient manager config
 --
 --   -- Login first
---   loginResult <- runClientM (login config) env
+--   loginResult <- runQB client (login config)
 --   case loginResult of
 --     Right "Ok." -> do
---       -- Get all torrents
---       torrents <- runClientM (getTorrents Nothing) env
+--       -- Get all torrents (session cookie is managed automatically)
+--       torrents <- runQB client (getTorrents Nothing)
 --       print torrents
 --     _ -> putStrLn "Login failed"
 -- @
@@ -108,12 +105,15 @@ module Network.QBittorrent.Client
   , syncMaindata
   , syncTorrentPeers
 
+    -- * Client
+  , QBClient (..)
+  , newClient
+  , runQB
+
     -- * Re-exports
   , module Network.QBittorrent.Types
-  , module Network.QBittorrent.Client.Auth
   , mkBaseUrl
   , ClientM
-  , runClientM
   , ClientError
   ) where
 
@@ -129,7 +129,7 @@ import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), Torrent
 import Network.QBittorrent.Client.Auth
 import Network.QBittorrent.Types
 import Servant.API (NoContent)
-import Servant.Client (ClientError, ClientM, runClientM)
+import Servant.Client (ClientError, ClientM)
 import Servant.Client.Generic (AsClientT, genericClient)
 
 -- | Generated client functions record

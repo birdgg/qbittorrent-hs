@@ -20,23 +20,22 @@ import Network.QBittorrent
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  let config = QBConfig
+  let config = defaultConfig
         { host = "localhost"
         , port = 8080
         , username = "admin"
         , password = "adminadmin"
-        , useTLS = False
         }
-  env <- mkClientEnv manager config
+  client <- newClient manager config
 
   -- Login
-  result <- runClientM (login config) env
+  result <- runQB client (login config)
   case result of
     Right "Ok." -> putStrLn "Logged in!"
     _ -> putStrLn "Login failed"
 
-  -- Get torrents
-  torrents <- runClientM (getTorrents Nothing) env
+  -- Get torrents (session cookie is managed automatically)
+  torrents <- runQB client (getTorrents Nothing)
   print torrents
 ```
 
