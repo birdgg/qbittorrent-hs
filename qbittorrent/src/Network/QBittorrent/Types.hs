@@ -7,6 +7,7 @@ module Network.QBittorrent.Types
 
     -- * Errors
   , QBError (..)
+  , clientErrorToQBError
 
     -- * Re-exports
   , module Network.QBittorrent.Types.App
@@ -19,7 +20,10 @@ module Network.QBittorrent.Types
   ) where
 
 import Data.Text (Text)
+import Data.Text qualified as T
 import GHC.Generics (Generic)
+import Servant.Client (ClientError (..))
+import Servant.Client.Core (ResponseF (..))
 import Network.QBittorrent.Types.App
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
@@ -69,3 +73,17 @@ data QBError
   | -- | Invalid torrent provided
     InvalidTorrent Text
   deriving stock (Show, Eq)
+
+-- | Convert servant ClientError to QBError
+clientErrorToQBError :: ClientError -> QBError
+clientErrorToQBError = \case
+  FailureResponse _ Response{responseStatusCode, responseBody} ->
+    ApiError (fromEnum responseStatusCode) (T.pack $ show responseBody)
+  DecodeFailure msg _ ->
+    ParseError msg
+  UnsupportedContentType _ _ ->
+    ParseError "Unsupported content type"
+  InvalidContentTypeHeader _ ->
+    ParseError "Invalid content type header"
+  ConnectionError ex ->
+    NetworkError (T.pack $ show ex)

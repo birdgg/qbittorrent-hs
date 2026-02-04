@@ -40,13 +40,10 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
-import Data.Text qualified as T
 import Network.HTTP.Client (Manager)
 import Network.QBittorrent.Client qualified as QB
 import Network.QBittorrent.Types
 import Servant.API (NoContent)
-import Servant.Client (ClientError (..))
-import Servant.Client.Core (ResponseF (..))
 
 -- | Simplified qBittorrent client with record-based API
 --
@@ -369,17 +366,3 @@ mkClient qbc = QBittorrentClient
       pure $ case result of
         Left err -> Left (clientErrorToQBError err)
         Right _ -> Right ()
-
--- | Convert servant ClientError to QBError
-clientErrorToQBError :: ClientError -> QBError
-clientErrorToQBError = \case
-  FailureResponse _ Response{responseStatusCode, responseBody} ->
-    ApiError (fromEnum responseStatusCode) (T.pack $ show responseBody)
-  DecodeFailure msg _ ->
-    ParseError msg
-  UnsupportedContentType _ _ ->
-    ParseError "Unsupported content type"
-  InvalidContentTypeHeader _ ->
-    ParseError "Invalid content type header"
-  ConnectionError ex ->
-    NetworkError (T.pack $ show ex)

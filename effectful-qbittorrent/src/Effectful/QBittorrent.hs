@@ -8,18 +8,15 @@
 -- @
 -- import Effectful
 -- import Effectful.QBittorrent
--- import Network.HTTP.Client (newManager)
--- import Network.HTTP.Client.TLS (tlsManagerSettings)
 --
 -- main :: IO ()
 -- main = do
---   manager <- newManager tlsManagerSettings
---   client <- newClient manager defaultConfig
+--   client <- newClient defaultConfig
 --   result <- runEff . runQBittorrent client $ do
 --     loginResult <- login defaultConfig
 --     case loginResult of
 --       Right "Ok." -> getTorrents Nothing
---       _ -> pure (Left $ error "Login failed")
+--       _ -> pure (Left $ AuthError "Login failed")
 --   print result
 -- @
 module Effectful.QBittorrent
@@ -136,16 +133,17 @@ module Effectful.QBittorrent
   , module Network.QBittorrent.Types
   , QBClient
   , newClient
-  , ClientError
+  , newClientWith
   ) where
 
 import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
+import Data.Bifunctor (first)
 import Effectful
 import Effectful.Dispatch.Static
-import Network.QBittorrent.Client (QBClient, ClientError, newClient)
+import Network.QBittorrent.Client (QBClient, newClient, newClientWith)
 import qualified Network.QBittorrent.Client as QB
 import Network.QBittorrent.Types
 import Servant.API (NoContent)
@@ -185,10 +183,11 @@ getQBClient = do
 liftQB
   :: (QBittorrent :> es, IOE :> es)
   => QB.ClientM a
-  -> Eff es (Either ClientError a)
+  -> Eff es (Either QBError a)
 liftQB action = do
   client <- getQBClient
-  unsafeEff_ $ QB.runQB client action
+  result <- unsafeEff_ $ QB.runQB client action
+  pure $ first clientErrorToQBError result
 
 -- -----------------------------------------------------------------------------
 -- Auth Operations
@@ -200,13 +199,13 @@ liftQB action = do
 login
   :: (QBittorrent :> es, IOE :> es)
   => QBConfig
-  -> Eff es (Either ClientError Text)
+  -> Eff es (Either QBError Text)
 login cfg = liftQB (QB.login cfg)
 
 -- | Logout from qBittorrent
 logout
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError NoContent)
+  => Eff es (Either QBError NoContent)
 logout = liftQB QB.logout
 
 -- -----------------------------------------------------------------------------
@@ -217,7 +216,7 @@ logout = liftQB QB.logout
 addTorrent
   :: (QBittorrent :> es, IOE :> es)
   => AddTorrentRequest
-  -> Eff es (Either ClientError Text)
+  -> Eff es (Either QBError Text)
 addTorrent req = liftQB (QB.addTorrent req)
 
 -- | Get torrents info
@@ -226,28 +225,28 @@ addTorrent req = liftQB (QB.addTorrent req)
 getTorrents
   :: (QBittorrent :> es, IOE :> es)
   => Maybe TorrentInfoRequest
-  -> Eff es (Either ClientError [TorrentInfo])
+  -> Eff es (Either QBError [TorrentInfo])
 getTorrents mReq = liftQB (QB.getTorrents mReq)
 
 -- | Get files within a torrent
 getTorrentFiles
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [TorrentFile])
+  -> Eff es (Either QBError [TorrentFile])
 getTorrentFiles hash = liftQB (QB.getTorrentFiles hash)
 
 -- | Stop torrents by hash
 stopTorrents
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 stopTorrents hashes = liftQB (QB.stopTorrents hashes)
 
 -- | Start torrents by hash
 startTorrents
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 startTorrents hashes = liftQB (QB.startTorrents hashes)
 
 -- | Delete torrents
@@ -257,7 +256,7 @@ deleteTorrents
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Bool
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 deleteTorrents hashes deleteFiles_ = liftQB (QB.deleteTorrents hashes deleteFiles_)
 
 -- | Add tags to torrents
@@ -265,7 +264,7 @@ addTags
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 addTags hashes tags = liftQB (QB.addTags hashes tags)
 
 -- | Remove tags from torrents
@@ -273,7 +272,7 @@ removeTags
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 removeTags hashes tags = liftQB (QB.removeTags hashes tags)
 
 -- | Rename a file within a torrent
@@ -282,7 +281,7 @@ renameFile
   => Text
   -> Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 renameFile hash oldPath newPath = liftQB (QB.renameFile hash oldPath newPath)
 
 -- | Rename a folder within a torrent
@@ -291,7 +290,7 @@ renameFolder
   => Text
   -> Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 renameFolder hash oldPath newPath = liftQB (QB.renameFolder hash oldPath newPath)
 
 -- | Set save location for torrents
@@ -299,7 +298,7 @@ setLocation
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setLocation hashes location = liftQB (QB.setLocation hashes location)
 
 -- -----------------------------------------------------------------------------
@@ -310,21 +309,21 @@ setLocation hashes location = liftQB (QB.setLocation hashes location)
 getTorrentProperties
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError TorrentProperties)
+  -> Eff es (Either QBError TorrentProperties)
 getTorrentProperties hash = liftQB (QB.getTorrentProperties hash)
 
 -- | Get trackers for a torrent
 getTorrentTrackers
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [TorrentTracker])
+  -> Eff es (Either QBError [TorrentTracker])
 getTorrentTrackers hash = liftQB (QB.getTorrentTrackers hash)
 
 -- | Get web seeds for a torrent
 getTorrentWebSeeds
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [TorrentWebSeed])
+  -> Eff es (Either QBError [TorrentWebSeed])
 getTorrentWebSeeds hash = liftQB (QB.getTorrentWebSeeds hash)
 
 -- | Get piece states for a torrent
@@ -334,21 +333,21 @@ getTorrentWebSeeds hash = liftQB (QB.getTorrentWebSeeds hash)
 getTorrentPieceStates
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [Int])
+  -> Eff es (Either QBError [Int])
 getTorrentPieceStates hash = liftQB (QB.getTorrentPieceStates hash)
 
 -- | Get piece hashes for a torrent
 getTorrentPieceHashes
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [Text])
+  -> Eff es (Either QBError [Text])
 getTorrentPieceHashes hash = liftQB (QB.getTorrentPieceHashes hash)
 
 -- | Export a torrent as .torrent file
 exportTorrent
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError ByteString)
+  -> Eff es (Either QBError ByteString)
 exportTorrent hash = liftQB (QB.exportTorrent hash)
 
 -- -----------------------------------------------------------------------------
@@ -359,42 +358,42 @@ exportTorrent hash = liftQB (QB.exportTorrent hash)
 recheckTorrents
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 recheckTorrents hashes = liftQB (QB.recheckTorrents hashes)
 
 -- | Reannounce torrents to trackers
 reannounceTorrents
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 reannounceTorrents hashes = liftQB (QB.reannounceTorrents hashes)
 
 -- | Increase priority of torrents
 increasePriority
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 increasePriority hashes = liftQB (QB.increasePriority hashes)
 
 -- | Decrease priority of torrents
 decreasePriority
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 decreasePriority hashes = liftQB (QB.decreasePriority hashes)
 
 -- | Set torrents to maximum priority
 setTopPriority
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setTopPriority hashes = liftQB (QB.setTopPriority hashes)
 
 -- | Set torrents to minimum priority
 setBottomPriority
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setBottomPriority hashes = liftQB (QB.setBottomPriority hashes)
 
 -- -----------------------------------------------------------------------------
@@ -409,7 +408,7 @@ setFilePriority
   => Text
   -> [Int]
   -> Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setFilePriority hash fileIds priority = liftQB (QB.setFilePriority hash fileIds priority)
 
 -- | Set download speed limit for torrents (bytes/second, -1 for unlimited)
@@ -417,7 +416,7 @@ setTorrentDownloadLimit
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setTorrentDownloadLimit hashes limit = liftQB (QB.setTorrentDownloadLimit hashes limit)
 
 -- | Set upload speed limit for torrents (bytes/second, -1 for unlimited)
@@ -425,7 +424,7 @@ setTorrentUploadLimit
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setTorrentUploadLimit hashes limit = liftQB (QB.setTorrentUploadLimit hashes limit)
 
 -- | Set share limits for torrents
@@ -439,7 +438,7 @@ setTorrentShareLimits
   -> Double
   -> Int
   -> Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setTorrentShareLimits hashes ratioLimit seedingTimeLimit inactiveSeedingTimeLimit =
   liftQB (QB.setTorrentShareLimits hashes ratioLimit seedingTimeLimit inactiveSeedingTimeLimit)
 
@@ -452,7 +451,7 @@ setSuperSeeding
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Bool
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setSuperSeeding hashes enabled = liftQB (QB.setSuperSeeding hashes enabled)
 
 -- | Enable/disable force start for torrents
@@ -460,7 +459,7 @@ setForceStart
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Bool
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setForceStart hashes enabled = liftQB (QB.setForceStart hashes enabled)
 
 -- | Enable/disable automatic torrent management for torrents
@@ -468,21 +467,21 @@ setAutoManagement
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Bool
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setAutoManagement hashes enabled = liftQB (QB.setAutoManagement hashes enabled)
 
 -- | Toggle sequential download mode for torrents
 toggleSequentialDownload
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 toggleSequentialDownload hashes = liftQB (QB.toggleSequentialDownload hashes)
 
 -- | Toggle first/last piece priority for torrents
 toggleFirstLastPiecePriority
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 toggleFirstLastPiecePriority hashes = liftQB (QB.toggleFirstLastPiecePriority hashes)
 
 -- -----------------------------------------------------------------------------
@@ -492,7 +491,7 @@ toggleFirstLastPiecePriority hashes = liftQB (QB.toggleFirstLastPiecePriority ha
 -- | Get all categories
 getCategories
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError (Map Text Category))
+  => Eff es (Either QBError (Map Text Category))
 getCategories = liftQB QB.getCategories
 
 -- | Set category for torrents
@@ -500,7 +499,7 @@ setTorrentCategory
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setTorrentCategory hashes cat = liftQB (QB.setTorrentCategory hashes cat)
 
 -- | Create a new category
@@ -508,7 +507,7 @@ createCategory
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 createCategory cat savePath = liftQB (QB.createCategory cat savePath)
 
 -- | Edit an existing category
@@ -516,14 +515,14 @@ editCategory
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 editCategory cat savePath = liftQB (QB.editCategory cat savePath)
 
 -- | Remove categories
 removeCategories
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 removeCategories cats = liftQB (QB.removeCategories cats)
 
 -- -----------------------------------------------------------------------------
@@ -533,21 +532,21 @@ removeCategories cats = liftQB (QB.removeCategories cats)
 -- | Get all tags
 getTags
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError [Text])
+  => Eff es (Either QBError [Text])
 getTags = liftQB QB.getTags
 
 -- | Create new global tags
 createGlobalTags
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 createGlobalTags tagsList = liftQB (QB.createGlobalTags tagsList)
 
 -- | Delete global tags
 deleteGlobalTags
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 deleteGlobalTags tagsList = liftQB (QB.deleteGlobalTags tagsList)
 
 -- -----------------------------------------------------------------------------
@@ -559,7 +558,7 @@ addTorrentTrackers
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 addTorrentTrackers hash urls = liftQB (QB.addTorrentTrackers hash urls)
 
 -- | Edit a tracker URL for a torrent
@@ -568,7 +567,7 @@ editTorrentTracker
   => Text
   -> Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 editTorrentTracker hash origUrl newUrl = liftQB (QB.editTorrentTracker hash origUrl newUrl)
 
 -- | Remove trackers from a torrent
@@ -576,7 +575,7 @@ removeTorrentTrackers
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 removeTorrentTrackers hash urls = liftQB (QB.removeTorrentTrackers hash urls)
 
 -- | Add peers to torrents
@@ -584,7 +583,7 @@ addTorrentPeers
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
   -> [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 addTorrentPeers hashes peers = liftQB (QB.addTorrentPeers hashes peers)
 
 -- -----------------------------------------------------------------------------
@@ -596,7 +595,7 @@ renameTorrent
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> Text
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 renameTorrent hash newName = liftQB (QB.renameTorrent hash newName)
 
 -- -----------------------------------------------------------------------------
@@ -608,7 +607,7 @@ renameTorrent hash newName = liftQB (QB.renameTorrent hash newName)
 -- Returns version string like "v5.0.0"
 getVersion
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Text)
+  => Eff es (Either QBError Text)
 getVersion = liftQB QB.getVersion
 
 -- | Get WebAPI version
@@ -616,7 +615,7 @@ getVersion = liftQB QB.getVersion
 -- Returns version string like "2.9.3"
 getWebapiVersion
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Text)
+  => Eff es (Either QBError Text)
 getWebapiVersion = liftQB QB.getWebapiVersion
 
 -- | Get build info
@@ -624,7 +623,7 @@ getWebapiVersion = liftQB QB.getWebapiVersion
 -- Returns build information including Qt, libtorrent, Boost, and OpenSSL versions.
 getBuildInfo
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError BuildInfo)
+  => Eff es (Either QBError BuildInfo)
 getBuildInfo = liftQB QB.getBuildInfo
 
 -- | Shutdown qBittorrent application
@@ -632,7 +631,7 @@ getBuildInfo = liftQB QB.getBuildInfo
 -- WARNING: This will terminate the qBittorrent process.
 shutdownApp
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError NoContent)
+  => Eff es (Either QBError NoContent)
 shutdownApp = liftQB QB.shutdownApp
 
 -- | Get qBittorrent preferences
@@ -640,7 +639,7 @@ shutdownApp = liftQB QB.shutdownApp
 -- Returns all application preferences.
 getPreferences
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Preferences)
+  => Eff es (Either QBError Preferences)
 getPreferences = liftQB QB.getPreferences
 
 -- | Set qBittorrent preferences
@@ -649,26 +648,26 @@ getPreferences = liftQB QB.getPreferences
 setPreferences
   :: (QBittorrent :> es, IOE :> es)
   => Preferences
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setPreferences prefs = liftQB (QB.setPreferences prefs)
 
 -- | Get default save path
 getDefaultSavePath
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Text)
+  => Eff es (Either QBError Text)
 getDefaultSavePath = liftQB QB.getDefaultSavePath
 
 -- | Get list of network interfaces
 getNetworkInterfaces
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError [Text])
+  => Eff es (Either QBError [Text])
 getNetworkInterfaces = liftQB QB.getNetworkInterfaces
 
 -- | Get addresses for a network interface
 getNetworkInterfaceAddresses
   :: (QBittorrent :> es, IOE :> es)
   => Text
-  -> Eff es (Either ClientError [Text])
+  -> Eff es (Either QBError [Text])
 getNetworkInterfaceAddresses iface = liftQB (QB.getNetworkInterfaceAddresses iface)
 
 -- -----------------------------------------------------------------------------
@@ -678,7 +677,7 @@ getNetworkInterfaceAddresses iface = liftQB (QB.getNetworkInterfaceAddresses ifa
 -- | Get total number of torrents
 getTorrentsCount
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Int)
+  => Eff es (Either QBError Int)
 getTorrentsCount = liftQB QB.getTorrentsCount
 
 -- | Get download limits for torrents
@@ -687,7 +686,7 @@ getTorrentsCount = liftQB QB.getTorrentsCount
 getTorrentDownloadLimits
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError (Map Text Int))
+  -> Eff es (Either QBError (Map Text Int))
 getTorrentDownloadLimits hashes = liftQB (QB.getTorrentDownloadLimits hashes)
 
 -- | Get upload limits for torrents
@@ -696,7 +695,7 @@ getTorrentDownloadLimits hashes = liftQB (QB.getTorrentDownloadLimits hashes)
 getTorrentUploadLimits
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError (Map Text Int))
+  -> Eff es (Either QBError (Map Text Int))
 getTorrentUploadLimits hashes = liftQB (QB.getTorrentUploadLimits hashes)
 
 -- -----------------------------------------------------------------------------
@@ -714,7 +713,7 @@ getMainLog
   -> Bool       -- ^ Include warning messages
   -> Bool       -- ^ Include critical messages
   -> Maybe Int64  -- ^ Last known id (exclude older entries)
-  -> Eff es (Either ClientError [LogEntry])
+  -> Eff es (Either QBError [LogEntry])
 getMainLog normal info warning critical lastKnownId =
   liftQB (QB.getMainLog normal info warning critical lastKnownId)
 
@@ -725,7 +724,7 @@ getMainLog normal info warning critical lastKnownId =
 getPeersLog
   :: (QBittorrent :> es, IOE :> es)
   => Maybe Int64
-  -> Eff es (Either ClientError [PeerLogEntry])
+  -> Eff es (Either QBError [PeerLogEntry])
 getPeersLog lastKnownId = liftQB (QB.getPeersLog lastKnownId)
 
 -- -----------------------------------------------------------------------------
@@ -739,7 +738,7 @@ getPeersLog lastKnownId = liftQB (QB.getPeersLog lastKnownId)
 syncMaindata
   :: (QBittorrent :> es, IOE :> es)
   => Int64
-  -> Eff es (Either ClientError SyncMainData)
+  -> Eff es (Either QBError SyncMainData)
 syncMaindata rid = liftQB (QB.syncMaindata rid)
 
 -- | Get torrent peers with incremental updates
@@ -750,7 +749,7 @@ syncTorrentPeers
   :: (QBittorrent :> es, IOE :> es)
   => Text
   -> Maybe Int64
-  -> Eff es (Either ClientError SyncTorrentPeers)
+  -> Eff es (Either QBError SyncTorrentPeers)
 syncTorrentPeers hash rid = liftQB (QB.syncTorrentPeers hash rid)
 
 -- -----------------------------------------------------------------------------
@@ -762,7 +761,7 @@ syncTorrentPeers hash rid = liftQB (QB.syncTorrentPeers hash rid)
 -- Returns current transfer statistics including speeds and totals.
 getTransferInfo
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError TransferInfo)
+  => Eff es (Either QBError TransferInfo)
 getTransferInfo = liftQB QB.getTransferInfo
 
 -- | Get alternative speed limits mode
@@ -770,13 +769,13 @@ getTransferInfo = liftQB QB.getTransferInfo
 -- Returns True if alternative speed limits are enabled, False otherwise.
 getSpeedLimitsMode
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Bool)
+  => Eff es (Either QBError Bool)
 getSpeedLimitsMode = liftQB QB.getSpeedLimitsMode
 
 -- | Toggle alternative speed limits on/off
 toggleSpeedLimitsMode
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError NoContent)
+  => Eff es (Either QBError NoContent)
 toggleSpeedLimitsMode = liftQB QB.toggleSpeedLimitsMode
 
 -- | Get global download limit
@@ -784,7 +783,7 @@ toggleSpeedLimitsMode = liftQB QB.toggleSpeedLimitsMode
 -- Returns the limit in bytes/s, or 0 for unlimited.
 getGlobalDownloadLimit
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Int)
+  => Eff es (Either QBError Int)
 getGlobalDownloadLimit = liftQB QB.getGlobalDownloadLimit
 
 -- | Set global download limit
@@ -793,7 +792,7 @@ getGlobalDownloadLimit = liftQB QB.getGlobalDownloadLimit
 setGlobalDownloadLimit
   :: (QBittorrent :> es, IOE :> es)
   => Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setGlobalDownloadLimit limit = liftQB (QB.setGlobalDownloadLimit limit)
 
 -- | Get global upload limit
@@ -801,7 +800,7 @@ setGlobalDownloadLimit limit = liftQB (QB.setGlobalDownloadLimit limit)
 -- Returns the limit in bytes/s, or 0 for unlimited.
 getGlobalUploadLimit
   :: (QBittorrent :> es, IOE :> es)
-  => Eff es (Either ClientError Int)
+  => Eff es (Either QBError Int)
 getGlobalUploadLimit = liftQB QB.getGlobalUploadLimit
 
 -- | Set global upload limit
@@ -810,7 +809,7 @@ getGlobalUploadLimit = liftQB QB.getGlobalUploadLimit
 setGlobalUploadLimit
   :: (QBittorrent :> es, IOE :> es)
   => Int
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 setGlobalUploadLimit limit = liftQB (QB.setGlobalUploadLimit limit)
 
 -- | Ban peers permanently
@@ -819,5 +818,5 @@ setGlobalUploadLimit limit = liftQB (QB.setGlobalUploadLimit limit)
 banPeers
   :: (QBittorrent :> es, IOE :> es)
   => [Text]
-  -> Eff es (Either ClientError NoContent)
+  -> Eff es (Either QBError NoContent)
 banPeers peers = liftQB (QB.banPeers peers)
