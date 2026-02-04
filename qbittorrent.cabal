@@ -32,6 +32,7 @@ library
     Network.QBittorrent.API.Torrents
     Network.QBittorrent.API.Transfer
     Network.QBittorrent.Client
+    Network.QBittorrent.SimpleClient
     Network.QBittorrent.Types
     Network.QBittorrent.Types.App
     Network.QBittorrent.Types.Filter

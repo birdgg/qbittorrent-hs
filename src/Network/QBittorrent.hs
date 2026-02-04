@@ -3,7 +3,27 @@
 -- This library provides a type-safe client for the qBittorrent Web API
 -- using servant-client.
 --
--- = Quick Start
+-- = Quick Start (Simple Client)
+--
+-- For the simplest usage, use "Network.QBittorrent.SimpleClient" which provides
+-- a record-based API with @IO (Either QBError a)@ return types:
+--
+-- @
+-- import Network.QBittorrent.SimpleClient
+--
+-- main :: IO ()
+-- main = do
+--   result <- newQBittorrentClient defaultConfig
+--   case result of
+--     Left err -> print err
+--     Right client -> do
+--       torrents <- client.getTorrents Nothing
+--       print torrents
+-- @
+--
+-- = Advanced Usage (ClientM)
+--
+-- For more control, use the servant-client based API:
 --
 -- @
 -- import Network.HTTP.Client (newManager)
@@ -28,8 +48,8 @@
 --
 -- = Session Management
 --
--- The 'QBClient' manages session cookies automatically. Create a client with
--- 'newClient' and use 'runQB' to execute requests.
+-- Both clients manage session cookies automatically. The simple client handles
+-- login during creation, while the advanced client requires explicit login.
 module Network.QBittorrent
   ( -- * Client
     module Network.QBittorrent.Client
