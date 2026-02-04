@@ -6,15 +6,12 @@
 -- = Usage
 --
 -- @
--- import Network.HTTP.Client (newManager)
--- import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- import Network.QBittorrent.Client qualified as QB
 --
 -- main :: IO ()
 -- main = do
---   manager <- newManager tlsManagerSettings
 --   let config = QB.defaultConfig { QB.host = "localhost", QB.port = 8080 }
---   client <- QB.newClient manager config
+--   client <- QB.newClient config
 --
 --   -- Login first
 --   loginResult <- QB.runQB client (QB.login config)
@@ -24,6 +21,16 @@
 --       torrents <- QB.runQB client (QB.getTorrents Nothing)
 --       print torrents
 --     _ -> putStrLn "Login failed"
+-- @
+--
+-- For custom HTTP manager settings, use 'newClientWith':
+--
+-- @
+-- import Network.HTTP.Client (newManager)
+-- import Network.HTTP.Client.TLS (tlsManagerSettings)
+--
+-- manager <- newManager tlsManagerSettings
+-- client <- QB.newClientWith manager config
 -- @
 module Network.QBittorrent.Client
   ( -- * Record API
@@ -107,6 +114,7 @@ module Network.QBittorrent.Client
     -- * Client
   , QBClient (..)
   , newClient
+  , newClientWith
   , runQB
 
     -- * Re-exports
@@ -127,7 +135,8 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLE
 import Text.Read (readMaybe)
-import Network.HTTP.Client (CookieJar, Manager)
+import Network.HTTP.Client (CookieJar, Manager, newManager)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), TorrentsRoutes (..), AppRoutes (..), LogRoutes (..), SyncRoutes (..), TransferRoutes (..), mkBaseUrl)
 import Network.QBittorrent.Types
 import Servant.Client qualified as Servant
@@ -149,17 +158,32 @@ data QBClient = QBClient
   , config :: QBConfig
   }
 
--- | Create a new qBittorrent client
+-- | Create a new qBittorrent client with default TLS manager
 --
--- The cookie jar is created and managed internally.
+-- The cookie jar and HTTP manager are created and managed internally.
+-- This is the simplest way to create a client.
+--
+-- @
+-- client <- newClient config
+-- result <- runQB client (login config)
+-- @
+newClient :: QBConfig -> IO QBClient
+newClient cfg = do
+  manager <- newManager tlsManagerSettings
+  newClientWith manager cfg
+
+-- | Create a new qBittorrent client with a custom HTTP manager
+--
+-- Use this when you need to share a manager across multiple clients
+-- or require custom manager settings.
 --
 -- @
 -- manager <- newManager tlsManagerSettings
--- client <- newClient manager config
+-- client <- newClientWith manager config
 -- result <- runQB client (login config)
 -- @
-newClient :: Manager -> QBConfig -> IO QBClient
-newClient manager cfg = do
+newClientWith :: Manager -> QBConfig -> IO QBClient
+newClientWith manager cfg = do
   jar <- newTVarIO mempty
   let baseEnv = Servant.mkClientEnv manager (mkBaseUrl cfg)
       env = baseEnv{Servant.cookieJar = Just jar}

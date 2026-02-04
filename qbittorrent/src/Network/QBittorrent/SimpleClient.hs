@@ -41,8 +41,7 @@ import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Network.HTTP.Client (Manager, newManager)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Client (Manager)
 import Network.QBittorrent.Client qualified as QB
 import Network.QBittorrent.Types
 import Servant.API (NoContent)
@@ -233,8 +232,8 @@ data QBittorrentClient = QBittorrentClient
 -- @
 newQBittorrentClient :: QBConfig -> IO (Either QBError QBittorrentClient)
 newQBittorrentClient config = do
-  manager <- newManager tlsManagerSettings
-  newQBittorrentClientWith manager config
+  qbClient <- QB.newClient config
+  loginAndMakeClient qbClient config
 
 -- | Create a new qBittorrent client with a provided HTTP manager
 --
@@ -242,8 +241,12 @@ newQBittorrentClient config = do
 -- or need custom manager settings.
 newQBittorrentClientWith :: Manager -> QBConfig -> IO (Either QBError QBittorrentClient)
 newQBittorrentClientWith manager config = do
-  qbClient <- QB.newClient manager config
-  -- Attempt login
+  qbClient <- QB.newClientWith manager config
+  loginAndMakeClient qbClient config
+
+-- | Internal: Attempt login and create client record
+loginAndMakeClient :: QB.QBClient -> QBConfig -> IO (Either QBError QBittorrentClient)
+loginAndMakeClient qbClient config = do
   loginResult <- QB.runQB qbClient (QB.login config)
   case loginResult of
     Left err -> pure $ Left (clientErrorToQBError err)

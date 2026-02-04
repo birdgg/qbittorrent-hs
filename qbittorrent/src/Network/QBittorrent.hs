@@ -26,14 +26,11 @@
 -- For more control, use the servant-client based API:
 --
 -- @
--- import Network.HTTP.Client (newManager)
--- import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- import Network.QBittorrent qualified as QB
 --
 -- main :: IO ()
 -- main = do
---   manager <- newManager tlsManagerSettings
---   client <- QB.newClient manager QB.defaultConfig
+--   client <- QB.newClient QB.defaultConfig
 --
 --   -- Login
 --   result <- QB.runQB client (QB.login QB.defaultConfig)
@@ -44,6 +41,17 @@
 --   -- Get torrents (session cookie is managed automatically)
 --   torrents <- QB.runQB client (QB.getTorrents Nothing)
 --   print torrents
+-- @
+--
+-- For custom HTTP manager settings, use 'newClientWith':
+--
+-- @
+-- import Network.HTTP.Client (newManager)
+-- import Network.HTTP.Client.TLS (tlsManagerSettings)
+-- import Network.QBittorrent qualified as QB
+--
+-- manager <- newManager tlsManagerSettings
+-- client <- QB.newClientWith manager QB.defaultConfig
 -- @
 --
 -- = Session Management

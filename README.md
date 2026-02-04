@@ -4,10 +4,23 @@ Haskell client library for the qBittorrent Web API.
 
 **Requires qBittorrent 5.0 or later.** This library does not support qBittorrent 4.x.
 
+## Packages
+
+This repository contains two packages:
+
+| Package | Description |
+|---------|-------------|
+| [`qbittorrent`](./qbittorrent/) | Core library with servant-client bindings |
+| [`effectful-qbittorrent`](./effectful-qbittorrent/) | [Effectful](https://hackage.haskell.org/package/effectful) integration |
+
 ## Installation
 
 ```cabal
+-- Core library
 build-depends: qbittorrent
+
+-- With Effectful support
+build-depends: qbittorrent, effectful-qbittorrent
 ```
 
 ## Quick Start
@@ -61,23 +74,20 @@ main = runApp defaultConfig myApp
 
 ### Advanced Usage (ClientM)
 
-For more control over the HTTP manager or to compose multiple API calls in `ClientM`:
+For more control or to compose multiple API calls in `ClientM`:
 
 ```haskell
-import Network.HTTP.Client (newManager)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.QBittorrent
 
 main :: IO ()
 main = do
-  manager <- newManager tlsManagerSettings
   let config = defaultConfig
         { host = "localhost"
         , port = 8080
         , username = "admin"
         , password = "adminadmin"
         }
-  client <- newClient manager config
+  client <- newClient config
 
   -- Login
   result <- runQB client (login config)
@@ -88,6 +98,20 @@ main = do
   -- Get torrents (session cookie is managed automatically)
   torrents <- runQB client (getTorrents Nothing)
   print torrents
+```
+
+For custom HTTP manager settings, use `newClientWith`:
+
+```haskell
+import Network.HTTP.Client (newManager)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.QBittorrent
+
+main :: IO ()
+main = do
+  manager <- newManager tlsManagerSettings
+  client <- newClientWith manager config
+  -- ...
 ```
 
 ### Multiple Clients with Shared Manager
@@ -110,6 +134,28 @@ main = do
   torrents1 <- client1.getTorrents Nothing
   torrents2 <- client2.getTorrents Nothing
   print (torrents1, torrents2)
+```
+
+### With Effectful
+
+Use the `effectful-qbittorrent` package for effectful integration:
+
+```haskell
+import Effectful
+import Effectful.QBittorrent
+import Network.QBittorrent.Client (newClient)
+
+main :: IO ()
+main = do
+  client <- newClient defaultConfig
+
+  result <- runEff . runQBittorrent client $ do
+    loginResult <- login defaultConfig
+    case loginResult of
+      Right "Ok." -> getTorrents Nothing
+      _ -> pure (Left $ error "Login failed")
+
+  print result
 ```
 
 ## API Coverage
