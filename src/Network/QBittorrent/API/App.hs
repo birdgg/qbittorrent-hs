@@ -40,5 +40,16 @@ data AppRoutes mode = AppRoutes
       :: mode
         :- "defaultSavePath"
           :> Get '[PlainText] Text
+  , -- | Get list of network interfaces
+    networkInterfaceList
+      :: mode
+        :- "networkInterfaceList"
+          :> Get '[JSON] [Text]
+  , -- | Get addresses for a network interface
+    networkInterfaceAddressList
+      :: mode
+        :- "networkInterfaceAddressList"
+          :> QueryParam' '[Required, Strict] "iface" Text
+          :> Get '[JSON] [Text]
   }
   deriving stock (Generic)

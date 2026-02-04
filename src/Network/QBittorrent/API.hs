@@ -8,7 +8,9 @@ module Network.QBittorrent.API
   , module Network.QBittorrent.API.Auth
   , module Network.QBittorrent.API.Torrents
   , module Network.QBittorrent.API.App
+  , module Network.QBittorrent.API.Log
   , module Network.QBittorrent.API.Sync
+  , module Network.QBittorrent.API.Transfer
 
     -- * Configuration
   , mkBaseUrl
@@ -18,8 +20,10 @@ import Data.Text qualified as T
 import GHC.Generics (Generic)
 import Network.QBittorrent.API.App
 import Network.QBittorrent.API.Auth
+import Network.QBittorrent.API.Log
 import Network.QBittorrent.API.Sync
 import Network.QBittorrent.API.Torrents
+import Network.QBittorrent.API.Transfer
 import Network.QBittorrent.Types (QBConfig (..))
 import Servant.API
 import Servant.Client (BaseUrl (..), Scheme (..))
@@ -32,7 +36,9 @@ data QBittorrentRoutes mode = QBittorrentRoutes
   { auth :: mode :- "auth" :> NamedRoutes AuthRoutes
   , torrents :: mode :- "torrents" :> NamedRoutes TorrentsRoutes
   , app :: mode :- "app" :> NamedRoutes AppRoutes
+  , log :: mode :- "log" :> NamedRoutes LogRoutes
   , sync :: mode :- "sync" :> NamedRoutes SyncRoutes
+  , transfer :: mode :- "transfer" :> NamedRoutes TransferRoutes
   }
   deriving stock (Generic)
 

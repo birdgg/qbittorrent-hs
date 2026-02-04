@@ -27,15 +27,19 @@ library
     Network.QBittorrent.API
     Network.QBittorrent.API.App
     Network.QBittorrent.API.Auth
+    Network.QBittorrent.API.Log
     Network.QBittorrent.API.Sync
     Network.QBittorrent.API.Torrents
+    Network.QBittorrent.API.Transfer
     Network.QBittorrent.Client
     Network.QBittorrent.Types
     Network.QBittorrent.Types.App
     Network.QBittorrent.Types.Filter
     Network.QBittorrent.Types.Form
+    Network.QBittorrent.Types.Log
     Network.QBittorrent.Types.Sync
     Network.QBittorrent.Types.Torrent
+    Network.QBittorrent.Types.Transfer
 
   build-depends:
     aeson >=2.1,

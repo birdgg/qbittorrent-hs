@@ -12,8 +12,10 @@ module Network.QBittorrent.Types
   , module Network.QBittorrent.Types.App
   , module Network.QBittorrent.Types.Filter
   , module Network.QBittorrent.Types.Form
+  , module Network.QBittorrent.Types.Log
   , module Network.QBittorrent.Types.Sync
   , module Network.QBittorrent.Types.Torrent
+  , module Network.QBittorrent.Types.Transfer
   ) where
 
 import Data.Text (Text)
@@ -21,8 +23,10 @@ import GHC.Generics (Generic)
 import Network.QBittorrent.Types.App
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
+import Network.QBittorrent.Types.Log
 import Network.QBittorrent.Types.Sync
 import Network.QBittorrent.Types.Torrent
+import Network.QBittorrent.Types.Transfer
 
 -- | qBittorrent client configuration
 data QBConfig = QBConfig

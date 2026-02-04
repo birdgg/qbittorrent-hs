@@ -22,6 +22,9 @@ module Network.QBittorrent.Types.Form
   , AddPeersForm (..)
   , RenameForm (..)
   , TagsOnlyForm (..)
+    -- * Transfer API Forms
+  , TransferLimitForm (..)
+  , BanPeersForm (..)
   ) where
 
 import Data.Text (Text)
@@ -190,6 +193,24 @@ data RenameForm = RenameForm
 -- | Tags only form (for createTags/deleteTags)
 newtype TagsOnlyForm = TagsOnlyForm
   { tags :: Text  -- comma separated
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToForm)
+
+-- -----------------------------------------------------------------------------
+-- Transfer API Forms
+-- -----------------------------------------------------------------------------
+
+-- | Global transfer limit form (for setDownloadLimit/setUploadLimit)
+newtype TransferLimitForm = TransferLimitForm
+  { limit :: Int  -- bytes/second, 0 for unlimited
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToForm)
+
+-- | Ban peers form
+newtype BanPeersForm = BanPeersForm
+  { peers :: Text  -- newline separated, format: host:port
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToForm)

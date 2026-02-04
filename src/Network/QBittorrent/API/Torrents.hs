@@ -27,6 +27,27 @@ data TorrentsRoutes mode = TorrentsRoutes
           :> QueryParam "tag" Text
           :> QueryParam "hashes" Text
           :> Get '[JSON] [TorrentInfo]
+  , -- | Get torrent count
+    count
+      :: mode
+        :- "count"
+          :> Get '[JSON] Int
+  , -- | Get download limits for torrents
+    --
+    -- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
+    downloadLimit
+      :: mode
+        :- "downloadLimit"
+          :> QueryParam' '[Required, Strict] "hashes" Text
+          :> Get '[JSON] (Map Text Int)
+  , -- | Get upload limits for torrents
+    --
+    -- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
+    uploadLimit
+      :: mode
+        :- "uploadLimit"
+          :> QueryParam' '[Required, Strict] "hashes" Text
+          :> Get '[JSON] (Map Text Int)
   , files
       :: mode
         :- "files"

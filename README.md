@@ -48,7 +48,7 @@ main = do
 | `login` | ✅ |
 | `logout` | ✅ |
 
-### Application API ✅ (7/9)
+### Application API ✅ (9/9)
 
 | Endpoint | Status |
 |----------|--------|
@@ -59,10 +59,10 @@ main = do
 | `preferences` | ✅ |
 | `setPreferences` | ✅ |
 | `defaultSavePath` | ✅ |
-| `networkInterfaceList` | ❌ |
-| `networkInterfaceAddressList` | ❌ |
+| `networkInterfaceList` | ✅ |
+| `networkInterfaceAddressList` | ✅ |
 
-### Torrents API ✅ (44/47)
+### Torrents API ✅ (47/47)
 
 | Endpoint | Status |
 |----------|--------|
@@ -111,9 +111,9 @@ main = do
 | `renameFolder` | ✅ |
 | `setLocation` | ✅ |
 | `export` | ✅ |
-| `count` | ❌ |
-| `downloadLimit` (get) | ❌ |
-| `uploadLimit` (get) | ❌ |
+| `count` | ✅ |
+| `downloadLimit` (get) | ✅ |
+| `uploadLimit` (get) | ✅ |
 
 ### Sync API ✅ (2/2)
 
@@ -122,25 +122,25 @@ main = do
 | `maindata` | ✅ |
 | `torrentPeers` | ✅ |
 
-### Log API ❌ (0/2)
+### Log API ✅ (2/2)
 
 | Endpoint | Status |
 |----------|--------|
-| `main` | ❌ |
-| `peers` | ❌ |
+| `main` | ✅ |
+| `peers` | ✅ |
 
-### Transfer API ❌ (0/7)
+### Transfer API ✅ (8/8)
 
 | Endpoint | Status |
 |----------|--------|
-| `info` | ❌ |
-| `speedLimitsMode` | ❌ |
-| `toggleSpeedLimitsMode` | ❌ |
-| `downloadLimit` | ❌ |
-| `setDownloadLimit` | ❌ |
-| `uploadLimit` | ❌ |
-| `setUploadLimit` | ❌ |
-| `banPeers` | ❌ |
+| `info` | ✅ |
+| `speedLimitsMode` | ✅ |
+| `toggleSpeedLimitsMode` | ✅ |
+| `downloadLimit` | ✅ |
+| `setDownloadLimit` | ✅ |
+| `uploadLimit` | ✅ |
+| `setUploadLimit` | ✅ |
+| `banPeers` | ✅ |
 
 ### RSS API ❌
 

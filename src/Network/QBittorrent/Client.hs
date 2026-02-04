@@ -82,8 +82,27 @@ module Network.QBittorrent.Client
   , getPreferences
   , setPreferences
   , getDefaultSavePath
+  , getNetworkInterfaces
+  , getNetworkInterfaceAddresses
+    -- ** Torrent Extensions
+  , getTorrentsCount
+  , getTorrentDownloadLimits
+  , getTorrentUploadLimits
+    -- ** Log API
+  , getMainLog
+  , getPeersLog
+    -- ** Sync API
   , syncMaindata
   , syncTorrentPeers
+    -- ** Transfer API
+  , getTransferInfo
+  , getSpeedLimitsMode
+  , toggleSpeedLimitsMode
+  , getGlobalDownloadLimit
+  , setGlobalDownloadLimit
+  , getGlobalUploadLimit
+  , setGlobalUploadLimit
+  , banPeers
 
     -- * Client
   , QBClient (..)
@@ -103,11 +122,13 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
+import Data.Maybe (fromMaybe)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLE
+import Text.Read (readMaybe)
 import Network.HTTP.Client (CookieJar, Manager)
-import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), TorrentsRoutes (..), AppRoutes (..), SyncRoutes (..), mkBaseUrl)
+import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), TorrentsRoutes (..), AppRoutes (..), LogRoutes (..), SyncRoutes (..), TransferRoutes (..), mkBaseUrl)
 import Network.QBittorrent.Types
 import Servant.Client qualified as Servant
 import Servant.API (NoContent)
@@ -477,6 +498,61 @@ setPreferences prefs =
 getDefaultSavePath :: ClientM Text
 getDefaultSavePath = qbClient.app.defaultSavePath
 
+-- | Get list of network interfaces
+getNetworkInterfaces :: ClientM [Text]
+getNetworkInterfaces = qbClient.app.networkInterfaceList
+
+-- | Get addresses for a network interface
+getNetworkInterfaceAddresses :: Text -> ClientM [Text]
+getNetworkInterfaceAddresses = qbClient.app.networkInterfaceAddressList
+
+-- -----------------------------------------------------------------------------
+-- Torrent Extensions
+-- -----------------------------------------------------------------------------
+
+-- | Get total number of torrents
+getTorrentsCount :: ClientM Int
+getTorrentsCount = qbClient.torrents.count
+
+-- | Get download limits for torrents
+--
+-- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
+getTorrentDownloadLimits :: [Text] -> ClientM (Map Text Int)
+getTorrentDownloadLimits hashes =
+  qbClient.torrents.downloadLimit (T.intercalate "|" hashes)
+
+-- | Get upload limits for torrents
+--
+-- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
+getTorrentUploadLimits :: [Text] -> ClientM (Map Text Int)
+getTorrentUploadLimits hashes =
+  qbClient.torrents.uploadLimit (T.intercalate "|" hashes)
+
+-- -----------------------------------------------------------------------------
+-- Log Operations
+-- -----------------------------------------------------------------------------
+
+-- | Get main log entries
+--
+-- Pass flags to filter log types. Pass 'Nothing' for lastKnownId to get all logs,
+-- or 'Just id' to get only logs newer than that id.
+getMainLog
+  :: Bool       -- ^ Include normal messages
+  -> Bool       -- ^ Include info messages
+  -> Bool       -- ^ Include warning messages
+  -> Bool       -- ^ Include critical messages
+  -> Maybe Int64  -- ^ Last known id (exclude older entries)
+  -> ClientM [LogEntry]
+getMainLog normal info warning critical lastKnownId =
+  qbClient.log.main normal info warning critical lastKnownId
+
+-- | Get peer log entries
+--
+-- Pass 'Nothing' for lastKnownId to get all logs,
+-- or 'Just id' to get only logs newer than that id.
+getPeersLog :: Maybe Int64 -> ClientM [PeerLogEntry]
+getPeersLog = qbClient.log.peers
+
 -- -----------------------------------------------------------------------------
 -- Sync Operations
 -- -----------------------------------------------------------------------------
@@ -494,3 +570,62 @@ syncMaindata = qbClient.sync.maindata
 -- Pass 'Nothing' for rid on the first request to get full data.
 syncTorrentPeers :: Text -> Maybe Int64 -> ClientM SyncTorrentPeers
 syncTorrentPeers hash rid = qbClient.sync.torrentPeers hash rid
+
+-- -----------------------------------------------------------------------------
+-- Transfer Operations
+-- -----------------------------------------------------------------------------
+
+-- | Get global transfer info
+--
+-- Returns current transfer statistics including speeds and totals.
+getTransferInfo :: ClientM TransferInfo
+getTransferInfo = qbClient.transfer.info
+
+-- | Get alternative speed limits mode
+--
+-- Returns True if alternative speed limits are enabled, False otherwise.
+getSpeedLimitsMode :: ClientM Bool
+getSpeedLimitsMode = do
+  result <- qbClient.transfer.speedLimitsMode
+  pure $ T.strip result == "1"
+
+-- | Toggle alternative speed limits on/off
+toggleSpeedLimitsMode :: ClientM NoContent
+toggleSpeedLimitsMode = qbClient.transfer.toggleSpeedLimitsMode
+
+-- | Get global download limit
+--
+-- Returns the limit in bytes/s, or 0 for unlimited.
+getGlobalDownloadLimit :: ClientM Int
+getGlobalDownloadLimit = do
+  result <- qbClient.transfer.downloadLimit
+  pure $ fromMaybe 0 $ readMaybe $ T.unpack $ T.strip result
+
+-- | Set global download limit
+--
+-- Pass 0 for unlimited.
+setGlobalDownloadLimit :: Int -> ClientM NoContent
+setGlobalDownloadLimit limit =
+  qbClient.transfer.setDownloadLimit (TransferLimitForm limit)
+
+-- | Get global upload limit
+--
+-- Returns the limit in bytes/s, or 0 for unlimited.
+getGlobalUploadLimit :: ClientM Int
+getGlobalUploadLimit = do
+  result <- qbClient.transfer.uploadLimit
+  pure $ fromMaybe 0 $ readMaybe $ T.unpack $ T.strip result
+
+-- | Set global upload limit
+--
+-- Pass 0 for unlimited.
+setGlobalUploadLimit :: Int -> ClientM NoContent
+setGlobalUploadLimit limit =
+  qbClient.transfer.setUploadLimit (TransferLimitForm limit)
+
+-- | Ban peers permanently
+--
+-- Each peer should be in format "host:port"
+banPeers :: [Text] -> ClientM NoContent
+banPeers peers =
+  qbClient.transfer.banPeers (BanPeersForm $ T.intercalate "\n" peers)
