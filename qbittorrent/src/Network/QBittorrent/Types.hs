@@ -12,6 +12,7 @@ module Network.QBittorrent.Types
   , module Network.QBittorrent.Types.App
   , module Network.QBittorrent.Types.Filter
   , module Network.QBittorrent.Types.Form
+  , module Network.QBittorrent.Types.InfoHash
   , module Network.QBittorrent.Types.Log
   , module Network.QBittorrent.Types.Sync
   , module Network.QBittorrent.Types.Tag
@@ -27,6 +28,7 @@ import Servant.Client.Core (ResponseF (..))
 import Network.QBittorrent.Types.App
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
+import Network.QBittorrent.Types.InfoHash
 import Network.QBittorrent.Types.Log
 import Network.QBittorrent.Types.Sync
 import Network.QBittorrent.Types.Tag

@@ -8,6 +8,7 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.QBittorrent.Types.Form
+import Network.QBittorrent.Types.InfoHash (InfoHash)
 import Network.QBittorrent.Types.Tag (Tag)
 import Network.QBittorrent.Types.Torrent
 import Servant.API
@@ -40,7 +41,7 @@ data TorrentsRoutes mode = TorrentsRoutes
       :: mode
         :- "downloadLimit"
           :> QueryParam' '[Required, Strict] "hashes" Text
-          :> Get '[JSON] (Map Text Int)
+          :> Get '[JSON] (Map InfoHash Int)
   , -- | Get upload limits for torrents
     --
     -- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
@@ -48,11 +49,11 @@ data TorrentsRoutes mode = TorrentsRoutes
       :: mode
         :- "uploadLimit"
           :> QueryParam' '[Required, Strict] "hashes" Text
-          :> Get '[JSON] (Map Text Int)
+          :> Get '[JSON] (Map InfoHash Int)
   , files
       :: mode
         :- "files"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] [TorrentFile]
   , stop
       :: mode
@@ -73,27 +74,27 @@ data TorrentsRoutes mode = TorrentsRoutes
     properties
       :: mode
         :- "properties"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] TorrentProperties
   , trackers
       :: mode
         :- "trackers"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] [TorrentTracker]
   , webseeds
       :: mode
         :- "webseeds"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] [TorrentWebSeed]
   , pieceStates
       :: mode
         :- "pieceStates"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] [Int]
   , pieceHashes
       :: mode
         :- "pieceHashes"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[JSON] [Text]
   , categories
       :: mode
@@ -106,7 +107,7 @@ data TorrentsRoutes mode = TorrentsRoutes
   , export
       :: mode
         :- "export"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> Get '[OctetStream] ByteString
   , -- Priority management
     recheck

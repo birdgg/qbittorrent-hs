@@ -33,6 +33,7 @@ import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.QBittorrent.Types.Filter (TorrentFilter)
+import Network.QBittorrent.Types.InfoHash (InfoHash)
 import Network.QBittorrent.Types.Tag (Tag, tagsToText, textToTags)
 import Web.FormUrlEncoded (Form (..), ToForm (..))
 
@@ -43,13 +44,13 @@ data TorrentInfoRequest = TorrentInfoRequest
   { filter_ :: Maybe TorrentFilter
   , category :: Maybe Text
   , tag :: Maybe Tag
-  , hashes :: Maybe Text
+  , hashes :: Maybe [InfoHash]
   }
   deriving stock (Show, Eq, Generic)
 
 -- | Torrent information from qBittorrent
 data TorrentInfo = TorrentInfo
-  { hash :: Text
+  { hash :: InfoHash
   , name :: Text
   , state :: TorrentState
   , progress :: Double

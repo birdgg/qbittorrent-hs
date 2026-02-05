@@ -13,6 +13,7 @@ import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import Network.QBittorrent.Types.InfoHash (InfoHash)
 import Network.QBittorrent.Types.Tag (Tag, textToTags)
 import Network.QBittorrent.Types.Torrent (TorrentState)
 
@@ -33,8 +34,8 @@ instance FromJSON CategoryInfo where
 data SyncMainData = SyncMainData
   { rid :: Int64
   , fullUpdate :: Bool
-  , torrents :: Map Text SyncTorrentInfo
-  , torrentsRemoved :: [Text]
+  , torrents :: Map InfoHash SyncTorrentInfo
+  , torrentsRemoved :: [InfoHash]
   , categories :: Map Text CategoryInfo
   , categoriesRemoved :: [Text]
   , tags :: [Tag]

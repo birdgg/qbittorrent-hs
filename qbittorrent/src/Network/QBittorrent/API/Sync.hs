@@ -4,8 +4,8 @@ module Network.QBittorrent.API.Sync
   ) where
 
 import Data.Int (Int64)
-import Data.Text (Text)
 import GHC.Generics (Generic)
+import Network.QBittorrent.Types.InfoHash (InfoHash)
 import Network.QBittorrent.Types.Sync (SyncMainData, SyncTorrentPeers)
 import Servant.API
 
@@ -19,7 +19,7 @@ data SyncRoutes mode = SyncRoutes
   , torrentPeers
       :: mode
         :- "torrentPeers"
-          :> QueryParam' '[Required, Strict] "hash" Text
+          :> QueryParam' '[Required, Strict] "hash" InfoHash
           :> QueryParam "rid" Int64
           :> Get '[JSON] SyncTorrentPeers
   }

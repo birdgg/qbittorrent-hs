@@ -75,85 +75,85 @@ data Client = Client
   , -- | Get torrents info (pass Nothing to get all)
     getTorrents :: Maybe TorrentInfoRequest -> IO (Either QBError [TorrentInfo])
   , -- | Get files within a torrent
-    getTorrentFiles :: Text -> IO (Either QBError [TorrentFile])
+    getTorrentFiles :: InfoHash -> IO (Either QBError [TorrentFile])
   , -- | Stop torrents by hash
-    stopTorrents :: [Text] -> IO (Either QBError ())
+    stopTorrents :: [InfoHash] -> IO (Either QBError ())
   , -- | Start torrents by hash
-    startTorrents :: [Text] -> IO (Either QBError ())
+    startTorrents :: [InfoHash] -> IO (Either QBError ())
   , -- | Delete torrents (second param: delete files)
-    deleteTorrents :: [Text] -> Bool -> IO (Either QBError ())
+    deleteTorrents :: [InfoHash] -> Bool -> IO (Either QBError ())
   , -- | Get total number of torrents
     getTorrentsCount :: IO (Either QBError Int)
 
     -- ** Torrent Properties
   , -- | Get general properties of a torrent
-    getTorrentProperties :: Text -> IO (Either QBError TorrentProperties)
+    getTorrentProperties :: InfoHash -> IO (Either QBError TorrentProperties)
   , -- | Get trackers for a torrent
-    getTorrentTrackers :: Text -> IO (Either QBError [TorrentTracker])
+    getTorrentTrackers :: InfoHash -> IO (Either QBError [TorrentTracker])
   , -- | Get web seeds for a torrent
-    getTorrentWebSeeds :: Text -> IO (Either QBError [TorrentWebSeed])
+    getTorrentWebSeeds :: InfoHash -> IO (Either QBError [TorrentWebSeed])
   , -- | Get piece states (0=not downloaded, 1=downloading, 2=downloaded)
-    getTorrentPieceStates :: Text -> IO (Either QBError [Int])
+    getTorrentPieceStates :: InfoHash -> IO (Either QBError [Int])
   , -- | Get piece hashes for a torrent
-    getTorrentPieceHashes :: Text -> IO (Either QBError [Text])
+    getTorrentPieceHashes :: InfoHash -> IO (Either QBError [Text])
   , -- | Export a torrent as .torrent file
-    exportTorrent :: Text -> IO (Either QBError ByteString)
+    exportTorrent :: InfoHash -> IO (Either QBError ByteString)
 
     -- ** Torrent Actions
   , -- | Recheck torrents
-    recheckTorrents :: [Text] -> IO (Either QBError ())
+    recheckTorrents :: [InfoHash] -> IO (Either QBError ())
   , -- | Reannounce torrents to trackers
-    reannounceTorrents :: [Text] -> IO (Either QBError ())
+    reannounceTorrents :: [InfoHash] -> IO (Either QBError ())
   , -- | Rename a torrent
-    renameTorrent :: Text -> Text -> IO (Either QBError ())
+    renameTorrent :: InfoHash -> Text -> IO (Either QBError ())
   , -- | Rename a file within a torrent
-    renameFile :: Text -> Text -> Text -> IO (Either QBError ())
+    renameFile :: InfoHash -> Text -> Text -> IO (Either QBError ())
   , -- | Rename a folder within a torrent
-    renameFolder :: Text -> Text -> Text -> IO (Either QBError ())
+    renameFolder :: InfoHash -> Text -> Text -> IO (Either QBError ())
   , -- | Set save location for torrents
-    setLocation :: [Text] -> Text -> IO (Either QBError ())
+    setLocation :: [InfoHash] -> Text -> IO (Either QBError ())
 
     -- ** Priority Management
   , -- | Increase priority of torrents
-    increasePriority :: [Text] -> IO (Either QBError ())
+    increasePriority :: [InfoHash] -> IO (Either QBError ())
   , -- | Decrease priority of torrents
-    decreasePriority :: [Text] -> IO (Either QBError ())
+    decreasePriority :: [InfoHash] -> IO (Either QBError ())
   , -- | Set torrents to maximum priority
-    setTopPriority :: [Text] -> IO (Either QBError ())
+    setTopPriority :: [InfoHash] -> IO (Either QBError ())
   , -- | Set torrents to minimum priority
-    setBottomPriority :: [Text] -> IO (Either QBError ())
+    setBottomPriority :: [InfoHash] -> IO (Either QBError ())
   , -- | Set file priority (0=skip, 1=normal, 6=high, 7=maximal)
-    setFilePriority :: Text -> [Int] -> Int -> IO (Either QBError ())
+    setFilePriority :: InfoHash -> [Int] -> Int -> IO (Either QBError ())
 
     -- ** Speed Limits
   , -- | Set download limit for torrents (bytes/s, -1 for unlimited)
-    setTorrentDownloadLimit :: [Text] -> Int -> IO (Either QBError ())
+    setTorrentDownloadLimit :: [InfoHash] -> Int -> IO (Either QBError ())
   , -- | Set upload limit for torrents (bytes/s, -1 for unlimited)
-    setTorrentUploadLimit :: [Text] -> Int -> IO (Either QBError ())
+    setTorrentUploadLimit :: [InfoHash] -> Int -> IO (Either QBError ())
   , -- | Get download limits for torrents
-    getTorrentDownloadLimits :: [Text] -> IO (Either QBError (Map Text Int))
+    getTorrentDownloadLimits :: [InfoHash] -> IO (Either QBError (Map InfoHash Int))
   , -- | Get upload limits for torrents
-    getTorrentUploadLimits :: [Text] -> IO (Either QBError (Map Text Int))
+    getTorrentUploadLimits :: [InfoHash] -> IO (Either QBError (Map InfoHash Int))
   , -- | Set share limits for torrents
-    setTorrentShareLimits :: [Text] -> Double -> Int -> Int -> IO (Either QBError ())
+    setTorrentShareLimits :: [InfoHash] -> Double -> Int -> Int -> IO (Either QBError ())
 
     -- ** Torrent Behavior
   , -- | Enable/disable super seeding mode
-    setSuperSeeding :: [Text] -> Bool -> IO (Either QBError ())
+    setSuperSeeding :: [InfoHash] -> Bool -> IO (Either QBError ())
   , -- | Enable/disable force start
-    setForceStart :: [Text] -> Bool -> IO (Either QBError ())
+    setForceStart :: [InfoHash] -> Bool -> IO (Either QBError ())
   , -- | Enable/disable automatic torrent management
-    setAutoManagement :: [Text] -> Bool -> IO (Either QBError ())
+    setAutoManagement :: [InfoHash] -> Bool -> IO (Either QBError ())
   , -- | Toggle sequential download mode
-    toggleSequentialDownload :: [Text] -> IO (Either QBError ())
+    toggleSequentialDownload :: [InfoHash] -> IO (Either QBError ())
   , -- | Toggle first/last piece priority
-    toggleFirstLastPiecePriority :: [Text] -> IO (Either QBError ())
+    toggleFirstLastPiecePriority :: [InfoHash] -> IO (Either QBError ())
 
     -- ** Category Management
   , -- | Get all categories
     getCategories :: IO (Either QBError (Map Text Category))
   , -- | Set category for torrents
-    setTorrentCategory :: [Text] -> Text -> IO (Either QBError ())
+    setTorrentCategory :: [InfoHash] -> Text -> IO (Either QBError ())
   , -- | Create a new category
     createCategory :: Text -> Text -> IO (Either QBError ())
   , -- | Edit an existing category
@@ -165,9 +165,9 @@ data Client = Client
   , -- | Get all tags
     getTags :: IO (Either QBError [Tag])
   , -- | Add tags to torrents
-    addTags :: [Text] -> [Tag] -> IO (Either QBError ())
+    addTags :: [InfoHash] -> [Tag] -> IO (Either QBError ())
   , -- | Remove tags from torrents
-    removeTags :: [Text] -> [Tag] -> IO (Either QBError ())
+    removeTags :: [InfoHash] -> [Tag] -> IO (Either QBError ())
   , -- | Create new global tags
     createGlobalTags :: [Tag] -> IO (Either QBError ())
   , -- | Delete global tags
@@ -175,13 +175,13 @@ data Client = Client
 
     -- ** Tracker Management
   , -- | Add trackers to a torrent
-    addTorrentTrackers :: Text -> [Text] -> IO (Either QBError ())
+    addTorrentTrackers :: InfoHash -> [Text] -> IO (Either QBError ())
   , -- | Edit a tracker URL
-    editTorrentTracker :: Text -> Text -> Text -> IO (Either QBError ())
+    editTorrentTracker :: InfoHash -> Text -> Text -> IO (Either QBError ())
   , -- | Remove trackers from a torrent
-    removeTorrentTrackers :: Text -> [Text] -> IO (Either QBError ())
+    removeTorrentTrackers :: InfoHash -> [Text] -> IO (Either QBError ())
   , -- | Add peers to torrents
-    addTorrentPeers :: [Text] -> [Text] -> IO (Either QBError ())
+    addTorrentPeers :: [InfoHash] -> [Text] -> IO (Either QBError ())
 
     -- ** Log API
   , -- | Get main log entries
@@ -193,7 +193,7 @@ data Client = Client
   , -- | Get sync maindata (pass 0 for first request)
     syncMaindata :: Int64 -> IO (Either QBError SyncMainData)
   , -- | Get torrent peers with incremental updates
-    syncTorrentPeers :: Text -> Maybe Int64 -> IO (Either QBError SyncTorrentPeers)
+    syncTorrentPeers :: InfoHash -> Maybe Int64 -> IO (Either QBError SyncTorrentPeers)
 
     -- ** Transfer API
   , -- | Get global transfer info

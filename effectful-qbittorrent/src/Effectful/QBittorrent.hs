@@ -243,21 +243,21 @@ getTorrents mReq = liftQB (QB.getTorrents mReq)
 -- | Get files within a torrent
 getTorrentFiles
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es [TorrentFile]
 getTorrentFiles hash = liftQB (QB.getTorrentFiles hash)
 
 -- | Stop torrents by hash
 stopTorrents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 stopTorrents hashes = liftQB (QB.stopTorrents hashes)
 
 -- | Start torrents by hash
 startTorrents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 startTorrents hashes = liftQB (QB.startTorrents hashes)
 
@@ -266,7 +266,7 @@ startTorrents hashes = liftQB (QB.startTorrents hashes)
 -- Set 'deleteFiles' to 'True' to also delete downloaded files.
 deleteTorrents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Bool
   -> Eff es NoContent
 deleteTorrents hashes deleteFiles_ = liftQB (QB.deleteTorrents hashes deleteFiles_)
@@ -274,7 +274,7 @@ deleteTorrents hashes deleteFiles_ = liftQB (QB.deleteTorrents hashes deleteFile
 -- | Add tags to torrents
 addTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> [Tag]
   -> Eff es NoContent
 addTags hashes tags = liftQB (QB.addTags hashes tags)
@@ -282,7 +282,7 @@ addTags hashes tags = liftQB (QB.addTags hashes tags)
 -- | Remove tags from torrents
 removeTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> [Tag]
   -> Eff es NoContent
 removeTags hashes tags = liftQB (QB.removeTags hashes tags)
@@ -290,7 +290,7 @@ removeTags hashes tags = liftQB (QB.removeTags hashes tags)
 -- | Rename a file within a torrent
 renameFile
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Text
   -> Text
   -> Eff es NoContent
@@ -299,7 +299,7 @@ renameFile hash oldPath newPath = liftQB (QB.renameFile hash oldPath newPath)
 -- | Rename a folder within a torrent
 renameFolder
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Text
   -> Text
   -> Eff es NoContent
@@ -308,7 +308,7 @@ renameFolder hash oldPath newPath = liftQB (QB.renameFolder hash oldPath newPath
 -- | Set save location for torrents
 setLocation
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Text
   -> Eff es NoContent
 setLocation hashes location = liftQB (QB.setLocation hashes location)
@@ -320,21 +320,21 @@ setLocation hashes location = liftQB (QB.setLocation hashes location)
 -- | Get general properties of a torrent
 getTorrentProperties
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es TorrentProperties
 getTorrentProperties hash = liftQB (QB.getTorrentProperties hash)
 
 -- | Get trackers for a torrent
 getTorrentTrackers
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es [TorrentTracker]
 getTorrentTrackers hash = liftQB (QB.getTorrentTrackers hash)
 
 -- | Get web seeds for a torrent
 getTorrentWebSeeds
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es [TorrentWebSeed]
 getTorrentWebSeeds hash = liftQB (QB.getTorrentWebSeeds hash)
 
@@ -344,21 +344,21 @@ getTorrentWebSeeds hash = liftQB (QB.getTorrentWebSeeds hash)
 -- 0 = not downloaded, 1 = downloading, 2 = downloaded
 getTorrentPieceStates
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es [Int]
 getTorrentPieceStates hash = liftQB (QB.getTorrentPieceStates hash)
 
 -- | Get piece hashes for a torrent
 getTorrentPieceHashes
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es [Text]
 getTorrentPieceHashes hash = liftQB (QB.getTorrentPieceHashes hash)
 
 -- | Export a torrent as .torrent file
 exportTorrent
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Eff es ByteString
 exportTorrent hash = liftQB (QB.exportTorrent hash)
 
@@ -369,42 +369,42 @@ exportTorrent hash = liftQB (QB.exportTorrent hash)
 -- | Recheck torrents
 recheckTorrents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 recheckTorrents hashes = liftQB (QB.recheckTorrents hashes)
 
 -- | Reannounce torrents to trackers
 reannounceTorrents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 reannounceTorrents hashes = liftQB (QB.reannounceTorrents hashes)
 
 -- | Increase priority of torrents
 increasePriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 increasePriority hashes = liftQB (QB.increasePriority hashes)
 
 -- | Decrease priority of torrents
 decreasePriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 decreasePriority hashes = liftQB (QB.decreasePriority hashes)
 
 -- | Set torrents to maximum priority
 setTopPriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 setTopPriority hashes = liftQB (QB.setTopPriority hashes)
 
 -- | Set torrents to minimum priority
 setBottomPriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 setBottomPriority hashes = liftQB (QB.setBottomPriority hashes)
 
@@ -417,7 +417,7 @@ setBottomPriority hashes = liftQB (QB.setBottomPriority hashes)
 -- Priority values: 0 = do not download, 1 = normal, 6 = high, 7 = maximal
 setFilePriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> [Int]
   -> Int
   -> Eff es NoContent
@@ -426,7 +426,7 @@ setFilePriority hash fileIds priority = liftQB (QB.setFilePriority hash fileIds 
 -- | Set download speed limit for torrents (bytes/second, -1 for unlimited)
 setTorrentDownloadLimit
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Int
   -> Eff es NoContent
 setTorrentDownloadLimit hashes limit = liftQB (QB.setTorrentDownloadLimit hashes limit)
@@ -434,7 +434,7 @@ setTorrentDownloadLimit hashes limit = liftQB (QB.setTorrentDownloadLimit hashes
 -- | Set upload speed limit for torrents (bytes/second, -1 for unlimited)
 setTorrentUploadLimit
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Int
   -> Eff es NoContent
 setTorrentUploadLimit hashes limit = liftQB (QB.setTorrentUploadLimit hashes limit)
@@ -446,7 +446,7 @@ setTorrentUploadLimit hashes limit = liftQB (QB.setTorrentUploadLimit hashes lim
 -- inactiveSeedingTimeLimit: -2 = use global, -1 = unlimited, >= 0 = minutes (v5.0+)
 setTorrentShareLimits
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Double
   -> Int
   -> Int
@@ -461,7 +461,7 @@ setTorrentShareLimits hashes ratioLimit seedingTimeLimit inactiveSeedingTimeLimi
 -- | Enable/disable super seeding mode for torrents
 setSuperSeeding
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Bool
   -> Eff es NoContent
 setSuperSeeding hashes enabled = liftQB (QB.setSuperSeeding hashes enabled)
@@ -469,7 +469,7 @@ setSuperSeeding hashes enabled = liftQB (QB.setSuperSeeding hashes enabled)
 -- | Enable/disable force start for torrents
 setForceStart
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Bool
   -> Eff es NoContent
 setForceStart hashes enabled = liftQB (QB.setForceStart hashes enabled)
@@ -477,7 +477,7 @@ setForceStart hashes enabled = liftQB (QB.setForceStart hashes enabled)
 -- | Enable/disable automatic torrent management for torrents
 setAutoManagement
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Bool
   -> Eff es NoContent
 setAutoManagement hashes enabled = liftQB (QB.setAutoManagement hashes enabled)
@@ -485,14 +485,14 @@ setAutoManagement hashes enabled = liftQB (QB.setAutoManagement hashes enabled)
 -- | Toggle sequential download mode for torrents
 toggleSequentialDownload
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 toggleSequentialDownload hashes = liftQB (QB.toggleSequentialDownload hashes)
 
 -- | Toggle first/last piece priority for torrents
 toggleFirstLastPiecePriority
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Eff es NoContent
 toggleFirstLastPiecePriority hashes = liftQB (QB.toggleFirstLastPiecePriority hashes)
 
@@ -509,7 +509,7 @@ getCategories = liftQB QB.getCategories
 -- | Set category for torrents
 setTorrentCategory
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> Text
   -> Eff es NoContent
 setTorrentCategory hashes cat = liftQB (QB.setTorrentCategory hashes cat)
@@ -568,7 +568,7 @@ deleteGlobalTags tagsList = liftQB (QB.deleteGlobalTags tagsList)
 -- | Add trackers to a torrent
 addTorrentTrackers
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> [Text]
   -> Eff es NoContent
 addTorrentTrackers hash urls = liftQB (QB.addTorrentTrackers hash urls)
@@ -576,7 +576,7 @@ addTorrentTrackers hash urls = liftQB (QB.addTorrentTrackers hash urls)
 -- | Edit a tracker URL for a torrent
 editTorrentTracker
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Text
   -> Text
   -> Eff es NoContent
@@ -585,7 +585,7 @@ editTorrentTracker hash origUrl newUrl = liftQB (QB.editTorrentTracker hash orig
 -- | Remove trackers from a torrent
 removeTorrentTrackers
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> [Text]
   -> Eff es NoContent
 removeTorrentTrackers hash urls = liftQB (QB.removeTorrentTrackers hash urls)
@@ -593,7 +593,7 @@ removeTorrentTrackers hash urls = liftQB (QB.removeTorrentTrackers hash urls)
 -- | Add peers to torrents
 addTorrentPeers
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [InfoHash]
   -> [Text]
   -> Eff es NoContent
 addTorrentPeers hashes peers = liftQB (QB.addTorrentPeers hashes peers)
@@ -605,7 +605,7 @@ addTorrentPeers hashes peers = liftQB (QB.addTorrentPeers hashes peers)
 -- | Rename a torrent
 renameTorrent
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Text
   -> Eff es NoContent
 renameTorrent hash newName = liftQB (QB.renameTorrent hash newName)
@@ -697,8 +697,8 @@ getTorrentsCount = liftQB QB.getTorrentsCount
 -- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
 getTorrentDownloadLimits
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
-  -> Eff es (Map Text Int)
+  => [InfoHash]
+  -> Eff es (Map InfoHash Int)
 getTorrentDownloadLimits hashes = liftQB (QB.getTorrentDownloadLimits hashes)
 
 -- | Get upload limits for torrents
@@ -706,8 +706,8 @@ getTorrentDownloadLimits hashes = liftQB (QB.getTorrentDownloadLimits hashes)
 -- Returns a map of hash -> limit (bytes/s, -1 for unlimited)
 getTorrentUploadLimits
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
-  -> Eff es (Map Text Int)
+  => [InfoHash]
+  -> Eff es (Map InfoHash Int)
 getTorrentUploadLimits hashes = liftQB (QB.getTorrentUploadLimits hashes)
 
 -- -----------------------------------------------------------------------------
@@ -759,7 +759,7 @@ syncMaindata rid = liftQB (QB.syncMaindata rid)
 -- Pass 'Nothing' for rid on the first request to get full data.
 syncTorrentPeers
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Text
+  => InfoHash
   -> Maybe Int64
   -> Eff es SyncTorrentPeers
 syncTorrentPeers hash rid = liftQB (QB.syncTorrentPeers hash rid)
