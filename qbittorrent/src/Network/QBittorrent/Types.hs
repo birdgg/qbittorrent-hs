@@ -14,6 +14,7 @@ module Network.QBittorrent.Types
   , module Network.QBittorrent.Types.Form
   , module Network.QBittorrent.Types.Log
   , module Network.QBittorrent.Types.Sync
+  , module Network.QBittorrent.Types.Tag
   , module Network.QBittorrent.Types.Torrent
   , module Network.QBittorrent.Types.Transfer
   ) where
@@ -28,6 +29,7 @@ import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
 import Network.QBittorrent.Types.Log
 import Network.QBittorrent.Types.Sync
+import Network.QBittorrent.Types.Tag
 import Network.QBittorrent.Types.Torrent
 import Network.QBittorrent.Types.Transfer
 

@@ -275,7 +275,7 @@ deleteTorrents hashes deleteFiles_ = liftQB (QB.deleteTorrents hashes deleteFile
 addTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
   => [Text]
-  -> [Text]
+  -> [Tag]
   -> Eff es NoContent
 addTags hashes tags = liftQB (QB.addTags hashes tags)
 
@@ -283,7 +283,7 @@ addTags hashes tags = liftQB (QB.addTags hashes tags)
 removeTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
   => [Text]
-  -> [Text]
+  -> [Tag]
   -> Eff es NoContent
 removeTags hashes tags = liftQB (QB.removeTags hashes tags)
 
@@ -544,20 +544,20 @@ removeCategories cats = liftQB (QB.removeCategories cats)
 -- | Get all tags
 getTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => Eff es [Text]
+  => Eff es [Tag]
 getTags = liftQB QB.getTags
 
 -- | Create new global tags
 createGlobalTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [Tag]
   -> Eff es NoContent
 createGlobalTags tagsList = liftQB (QB.createGlobalTags tagsList)
 
 -- | Delete global tags
 deleteGlobalTags
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
-  => [Text]
+  => [Tag]
   -> Eff es NoContent
 deleteGlobalTags tagsList = liftQB (QB.deleteGlobalTags tagsList)
 

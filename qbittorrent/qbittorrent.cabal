@@ -39,6 +39,7 @@ library
     Network.QBittorrent.Types.Form
     Network.QBittorrent.Types.Log
     Network.QBittorrent.Types.Sync
+    Network.QBittorrent.Types.Tag
     Network.QBittorrent.Types.Torrent
     Network.QBittorrent.Types.Transfer
 

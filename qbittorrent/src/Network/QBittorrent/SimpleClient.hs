@@ -163,15 +163,15 @@ data Client = Client
 
     -- ** Tag Management
   , -- | Get all tags
-    getTags :: IO (Either QBError [Text])
+    getTags :: IO (Either QBError [Tag])
   , -- | Add tags to torrents
-    addTags :: [Text] -> [Text] -> IO (Either QBError ())
+    addTags :: [Text] -> [Tag] -> IO (Either QBError ())
   , -- | Remove tags from torrents
-    removeTags :: [Text] -> [Text] -> IO (Either QBError ())
+    removeTags :: [Text] -> [Tag] -> IO (Either QBError ())
   , -- | Create new global tags
-    createGlobalTags :: [Text] -> IO (Either QBError ())
+    createGlobalTags :: [Tag] -> IO (Either QBError ())
   , -- | Delete global tags
-    deleteGlobalTags :: [Text] -> IO (Either QBError ())
+    deleteGlobalTags :: [Tag] -> IO (Either QBError ())
 
     -- ** Tracker Management
   , -- | Add trackers to a torrent

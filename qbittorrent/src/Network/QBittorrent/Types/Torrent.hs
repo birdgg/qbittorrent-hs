@@ -33,6 +33,7 @@ import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.QBittorrent.Types.Filter (TorrentFilter)
+import Network.QBittorrent.Types.Tag (Tag, tagsToText, textToTags)
 import Web.FormUrlEncoded (Form (..), ToForm (..))
 
 import Data.Map.Strict qualified as Map
@@ -41,7 +42,7 @@ import Data.Map.Strict qualified as Map
 data TorrentInfoRequest = TorrentInfoRequest
   { filter_ :: Maybe TorrentFilter
   , category :: Maybe Text
-  , tag :: Maybe Text
+  , tag :: Maybe Tag
   , hashes :: Maybe Text
   }
   deriving stock (Show, Eq, Generic)
@@ -56,7 +57,7 @@ data TorrentInfo = TorrentInfo
   , size :: Int64
   , downloaded :: Int64
   , eta :: Int64
-  , tags :: Text
+  , tags :: [Tag]
   }
   deriving stock (Show, Eq, Generic)
 
@@ -71,7 +72,7 @@ instance FromJSON TorrentInfo where
       <*> o .: "size"
       <*> o .: "downloaded"
       <*> o .: "eta"
-      <*> o .:? "tags" .!= ""
+      <*> (textToTags <$> o .:? "tags" .!= "")
 
 -- | File information within a torrent
 data TorrentFile = TorrentFile
@@ -99,7 +100,7 @@ data AddTorrentRequest = AddTorrentRequest
   { urls :: Maybe Text
   , savepath :: Maybe Text
   , category :: Maybe Text
-  , tags :: Maybe Text
+  , tags :: Maybe [Tag]
   , rename :: Maybe Text
   , stopped :: Maybe Bool
   }
@@ -112,7 +113,7 @@ instance ToJSON AddTorrentRequest where
         [ ("urls" .=) <$> req.urls
         , ("savepath" .=) <$> req.savepath
         , ("category" .=) <$> req.category
-        , ("tags" .=) <$> req.tags
+        , fmap (\ts -> "tags" .= tagsToText ts) req.tags
         , ("rename" .=) <$> req.rename
         , ("stopped" .=) <$> req.stopped
         ]
@@ -125,7 +126,7 @@ instance ToForm AddTorrentRequest where
           [ fmap (\v -> ("urls", [v])) req.urls
           , fmap (\v -> ("savepath", [v])) req.savepath
           , fmap (\v -> ("category", [v])) req.category
-          , fmap (\v -> ("tags", [v])) req.tags
+          , fmap (\ts -> ("tags", [tagsToText ts])) req.tags
           , fmap (\v -> ("rename", [v])) req.rename
           , fmap (\v -> ("stopped", [if v then "true" else "false"])) req.stopped
           ]

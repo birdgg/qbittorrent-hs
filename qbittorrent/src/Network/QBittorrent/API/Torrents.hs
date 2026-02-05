@@ -8,6 +8,7 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.QBittorrent.Types.Form
+import Network.QBittorrent.Types.Tag (Tag)
 import Network.QBittorrent.Types.Torrent
 import Servant.API
 
@@ -101,7 +102,7 @@ data TorrentsRoutes mode = TorrentsRoutes
   , tags
       :: mode
         :- "tags"
-          :> Get '[JSON] [Text]
+          :> Get '[JSON] [Tag]
   , export
       :: mode
         :- "export"

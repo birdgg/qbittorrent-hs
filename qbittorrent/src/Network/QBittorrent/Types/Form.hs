@@ -27,9 +27,11 @@ module Network.QBittorrent.Types.Form
   , BanPeersForm (..)
   ) where
 
+import Data.Map.Strict qualified as Map
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Web.FormUrlEncoded (ToForm)
+import Network.QBittorrent.Types.Tag (Tag, tagsToText)
+import Web.FormUrlEncoded (Form (..), ToForm (..))
 
 -- | Login form
 data LoginForm = LoginForm
@@ -55,10 +57,17 @@ data DeleteTorrentsForm = DeleteTorrentsForm
 -- | Tags form
 data TagsForm = TagsForm
   { hashes :: Text
-  , tags :: Text
+  , tags :: [Tag]
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (ToForm)
+
+instance ToForm TagsForm where
+  toForm form =
+    Form $
+      Map.fromList
+        [ ("hashes", [form.hashes])
+        , ("tags", [tagsToText form.tags])
+        ]
 
 -- | Rename file form
 data RenameFileForm = RenameFileForm
@@ -192,10 +201,16 @@ data RenameForm = RenameForm
 
 -- | Tags only form (for createTags/deleteTags)
 newtype TagsOnlyForm = TagsOnlyForm
-  { tags :: Text  -- comma separated
+  { tags :: [Tag]
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (ToForm)
+
+instance ToForm TagsOnlyForm where
+  toForm form =
+    Form $
+      Map.fromList
+        [ ("tags", [tagsToText form.tags])
+        ]
 
 -- -----------------------------------------------------------------------------
 -- Transfer API Forms

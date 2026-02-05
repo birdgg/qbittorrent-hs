@@ -13,6 +13,7 @@ import Data.Int (Int64)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import Network.QBittorrent.Types.Tag (Tag, textToTags)
 import Network.QBittorrent.Types.Torrent (TorrentState)
 
 -- | Category information
@@ -36,8 +37,8 @@ data SyncMainData = SyncMainData
   , torrentsRemoved :: [Text]
   , categories :: Map Text CategoryInfo
   , categoriesRemoved :: [Text]
-  , tags :: [Text]
-  , tagsRemoved :: [Text]
+  , tags :: [Tag]
+  , tagsRemoved :: [Tag]
   , serverState :: Maybe ServerState
   }
   deriving stock (Show, Eq, Generic)
@@ -72,7 +73,7 @@ data SyncTorrentInfo = SyncTorrentInfo
   , addedOn :: Maybe Int64
   , completionOn :: Maybe Int64
   , category :: Maybe Text
-  , tags :: Maybe Text
+  , tags :: Maybe [Tag]
   , contentPath :: Maybe Text
   }
   deriving stock (Show, Eq, Generic)
@@ -95,7 +96,7 @@ instance FromJSON SyncTorrentInfo where
       <*> o .:? "added_on"
       <*> o .:? "completion_on"
       <*> o .:? "category"
-      <*> o .:? "tags"
+      <*> (fmap textToTags <$> o .:? "tags")
       <*> o .:? "content_path"
 
 -- | Server state from sync maindata

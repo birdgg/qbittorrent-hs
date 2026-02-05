@@ -231,7 +231,7 @@ getTorrents mReq = case mReq of
     qbClient.torrents.info
       (torrentFilterToText <$> req.filter_)
       req.category
-      req.tag
+      (fmap (.unTag) req.tag)
       req.hashes
 
 -- | Get files within a torrent
@@ -255,14 +255,14 @@ deleteTorrents hashes deleteFiles_ =
     (DeleteTorrentsForm (T.intercalate "|" hashes) (if deleteFiles_ then "true" else "false"))
 
 -- | Add tags to torrents
-addTags :: [Text] -> [Text] -> ClientM NoContent
+addTags :: [Text] -> [Tag] -> ClientM NoContent
 addTags hashes tags =
-  qbClient.torrents.addTags (TagsForm (T.intercalate "|" hashes) (T.intercalate "," tags))
+  qbClient.torrents.addTags (TagsForm (T.intercalate "|" hashes) tags)
 
 -- | Remove tags from torrents
-removeTags :: [Text] -> [Text] -> ClientM NoContent
+removeTags :: [Text] -> [Tag] -> ClientM NoContent
 removeTags hashes tags =
-  qbClient.torrents.removeTags (TagsForm (T.intercalate "|" hashes) (T.intercalate "," tags))
+  qbClient.torrents.removeTags (TagsForm (T.intercalate "|" hashes) tags)
 
 -- | Rename a file within a torrent
 renameFile :: Text -> Text -> Text -> ClientM NoContent
@@ -428,18 +428,18 @@ removeCategories cats =
 -- -----------------------------------------------------------------------------
 
 -- | Get all tags
-getTags :: ClientM [Text]
+getTags :: ClientM [Tag]
 getTags = qbClient.torrents.tags
 
 -- | Create new global tags
-createGlobalTags :: [Text] -> ClientM NoContent
+createGlobalTags :: [Tag] -> ClientM NoContent
 createGlobalTags tagsList =
-  qbClient.torrents.createTags (TagsOnlyForm $ T.intercalate "," tagsList)
+  qbClient.torrents.createTags (TagsOnlyForm tagsList)
 
 -- | Delete global tags
-deleteGlobalTags :: [Text] -> ClientM NoContent
+deleteGlobalTags :: [Tag] -> ClientM NoContent
 deleteGlobalTags tagsList =
-  qbClient.torrents.deleteTags (TagsOnlyForm $ T.intercalate "," tagsList)
+  qbClient.torrents.deleteTags (TagsOnlyForm tagsList)
 
 -- -----------------------------------------------------------------------------
 -- Tracker Management
