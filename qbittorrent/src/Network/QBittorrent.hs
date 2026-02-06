@@ -30,7 +30,7 @@
 --
 -- main :: IO ()
 -- main = do
---   client <- QB.newClient QB.defaultConfig
+--   client <- QB.initQBClient QB.defaultConfig
 --
 --   -- Login
 --   result <- QB.runQB client (QB.login QB.defaultConfig)
@@ -43,7 +43,7 @@
 --   print torrents
 -- @
 --
--- For custom HTTP manager settings, use 'newClientWith':
+-- For custom HTTP manager settings, use 'initQBClientWith':
 --
 -- @
 -- import Network.HTTP.Client (newManager)
@@ -51,7 +51,7 @@
 -- import Network.QBittorrent qualified as QB
 --
 -- manager <- newManager tlsManagerSettings
--- client <- QB.newClientWith manager QB.defaultConfig
+-- client <- QB.initQBClientWith manager QB.defaultConfig
 -- @
 --
 -- = Session Management

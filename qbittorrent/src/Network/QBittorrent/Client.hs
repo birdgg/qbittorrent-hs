@@ -11,7 +11,7 @@
 -- main :: IO ()
 -- main = do
 --   let config = QB.defaultConfig { QB.host = "localhost", QB.port = 8080 }
---   client <- QB.newClient config
+--   client <- QB.initQBClient config
 --
 --   -- Login first
 --   loginResult <- QB.runQB client (QB.login config)
@@ -23,14 +23,14 @@
 --     _ -> putStrLn "Login failed"
 -- @
 --
--- For custom HTTP manager settings, use 'newClientWith':
+-- For custom HTTP manager settings, use 'initQBClientWith':
 --
 -- @
 -- import Network.HTTP.Client (newManager)
 -- import Network.HTTP.Client.TLS (tlsManagerSettings)
 --
 -- manager <- newManager tlsManagerSettings
--- client <- QB.newClientWith manager config
+-- client <- QB.initQBClientWith manager config
 -- @
 module Network.QBittorrent.Client
   ( -- * Record API
@@ -112,9 +112,8 @@ module Network.QBittorrent.Client
   , banPeers
 
     -- * Client
-  , QBClient (..)
-  , newClient
-  , newClientWith
+  , initQBClient
+  , initQBClientWith
   , runQB
 
     -- * Re-exports
@@ -124,7 +123,7 @@ module Network.QBittorrent.Client
   , ClientError
   ) where
 
-import Control.Concurrent.STM (TVar, newTVarIO)
+import Control.Concurrent.STM (newTVarIO)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Int (Int64)
@@ -135,28 +134,18 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLE
 import Text.Read (readMaybe)
-import Network.HTTP.Client (CookieJar, Manager, newManager)
+import Network.HTTP.Client (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.QBittorrent.API (QBittorrentRoutes (..), AuthRoutes (..), TorrentsRoutes (..), AppRoutes (..), LogRoutes (..), SyncRoutes (..), TransferRoutes (..), mkBaseUrl)
 import Network.QBittorrent.Types
 import Servant.Client qualified as Servant
 import Servant.API (NoContent)
-import Servant.Client (ClientEnv, ClientError, ClientM, runClientM)
+import Servant.Client (ClientError, ClientM, runClientM)
 import Servant.Client.Generic (AsClientT, genericClient)
 
 -- -----------------------------------------------------------------------------
 -- Client
 -- -----------------------------------------------------------------------------
-
--- | qBittorrent client with automatic session management
---
--- The client maintains a cookie jar internally for session persistence.
--- Create with 'newClient' and use with 'runQB'.
-data QBClient = QBClient
-  { clientEnv :: ClientEnv
-  , cookieJar :: TVar CookieJar
-  , config :: QBConfig
-  }
 
 -- | Create a new qBittorrent client with default TLS manager
 --
@@ -164,13 +153,13 @@ data QBClient = QBClient
 -- This is the simplest way to create a client.
 --
 -- @
--- client <- newClient config
+-- client <- initQBClient config
 -- result <- runQB client (login config)
 -- @
-newClient :: QBConfig -> IO QBClient
-newClient cfg = do
+initQBClient :: QBConfig -> IO QBClient
+initQBClient cfg = do
   manager <- newManager tlsManagerSettings
-  newClientWith manager cfg
+  initQBClientWith manager cfg
 
 -- | Create a new qBittorrent client with a custom HTTP manager
 --
@@ -179,11 +168,11 @@ newClient cfg = do
 --
 -- @
 -- manager <- newManager tlsManagerSettings
--- client <- newClientWith manager config
+-- client <- initQBClientWith manager config
 -- result <- runQB client (login config)
 -- @
-newClientWith :: Manager -> QBConfig -> IO QBClient
-newClientWith manager cfg = do
+initQBClientWith :: Manager -> QBConfig -> IO QBClient
+initQBClientWith manager cfg = do
   jar <- newTVarIO mempty
   let baseEnv = Servant.mkClientEnv manager (mkBaseUrl cfg)
       env = baseEnv{Servant.cookieJar = Just jar}
@@ -207,7 +196,7 @@ qbClient = genericClient
 --
 -- Returns "Ok." on success or "Fails." on failure.
 login :: QBConfig -> ClientM Text
-login cfg = qbClient.auth.login (LoginForm cfg.username cfg.password)
+login cfg = qbClient.auth.login (LoginForm cfg.credential.username cfg.credential.password)
 
 -- | Logout from qBittorrent
 logout :: ClientM NoContent

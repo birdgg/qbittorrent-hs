@@ -4,12 +4,16 @@ module Network.QBittorrent.Types
     QBConfig (..)
   , defaultConfig
 
+    -- * Client
+  , QBClient (..)
+
     -- * Errors
   , QBError (..)
   , clientErrorToQBError
 
     -- * Re-exports
   , module Network.QBittorrent.Types.App
+  , module Network.QBittorrent.Types.Credential
   , module Network.QBittorrent.Types.Filter
   , module Network.QBittorrent.Types.Form
   , module Network.QBittorrent.Types.InfoHash
@@ -20,12 +24,15 @@ module Network.QBittorrent.Types
   , module Network.QBittorrent.Types.Transfer
   ) where
 
+import Control.Concurrent.STM (TVar)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics (Generic)
-import Servant.Client (ClientError (..))
+import Network.HTTP.Client (CookieJar)
+import Servant.Client (ClientEnv, ClientError (..))
 import Servant.Client.Core (ResponseF (..))
 import Network.QBittorrent.Types.App
+import Network.QBittorrent.Types.Credential
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
 import Network.QBittorrent.Types.InfoHash
@@ -39,8 +46,7 @@ import Network.QBittorrent.Types.Transfer
 data QBConfig = QBConfig
   { host :: Text
   , port :: Int
-  , username :: Text
-  , password :: Text
+  , credential :: Credential
   , useTLS :: Bool
   }
   deriving stock (Show, Eq, Generic)
@@ -51,10 +57,19 @@ defaultConfig =
   QBConfig
     { host = "localhost"
     , port = 8080
-    , username = "admin"
-    , password = "adminadmin"
+    , credential = Credential "admin" "adminadmin"
     , useTLS = False
     }
+
+-- | qBittorrent client with automatic session management
+--
+-- The client maintains a cookie jar internally for session persistence.
+-- Create with 'initQBClient' and use with 'runQB'.
+data QBClient = QBClient
+  { clientEnv :: ClientEnv
+  , cookieJar :: TVar CookieJar
+  , config :: QBConfig
+  }
 
 -- | Errors that can occur during qBittorrent API operations
 data QBError

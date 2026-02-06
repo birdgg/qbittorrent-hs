@@ -12,7 +12,7 @@
 --
 -- main :: IO ()
 -- main = do
---   client <- newClient defaultConfig
+--   client <- initQBClient defaultConfig
 --   result <- runEff . runErrorNoCallStack \@QBError . runQBittorrent client $ do
 --     login defaultConfig
 --     getTorrents Nothing
@@ -132,9 +132,8 @@ module Effectful.QBittorrent
 
     -- * Re-exports
   , module Network.QBittorrent.Types
-  , QBClient
-  , newClient
-  , newClientWith
+  , initQBClient
+  , initQBClientWith
     -- ** Error handling
   , Error
   , runError
@@ -150,7 +149,7 @@ import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Static
 import Effectful.Error.Static (Error, runError, runErrorNoCallStack, catchError, throwError)
-import Network.QBittorrent.Client (QBClient, newClient, newClientWith)
+import Network.QBittorrent.Client (initQBClient, initQBClientWith)
 import qualified Network.QBittorrent.Client as QB
 import Network.QBittorrent.Types
 import Servant.API (NoContent)

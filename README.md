@@ -34,7 +34,7 @@ import Network.QBittorrent.SimpleClient qualified as QB
 
 main :: IO ()
 main = do
-  result <- QB.newClient QB.defaultConfig
+  result <- QB.initQBClient QB.defaultConfig
   case result of
     Left err -> print err
     Right client -> do
@@ -58,7 +58,7 @@ type App a = ReaderT QB.Client IO a
 
 runApp :: QB.QBConfig -> App a -> IO a
 runApp config action = do
-  Right client <- QB.newClient config
+  Right client <- QB.initQBClient config
   runReaderT action client
 
 myApp :: App ()
@@ -87,7 +87,7 @@ main = do
         , username = "admin"
         , password = "adminadmin"
         }
-  client <- newClient config
+  client <- initQBClient config
 
   -- Login
   result <- runQB client (login config)
@@ -100,7 +100,7 @@ main = do
   print torrents
 ```
 
-For custom HTTP manager settings, use `newClientWith`:
+For custom HTTP manager settings, use `initQBClientWith`:
 
 ```haskell
 import Network.HTTP.Client (newManager)
@@ -110,7 +110,7 @@ import Network.QBittorrent
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  client <- newClientWith manager config
+  client <- initQBClientWith manager config
   -- ...
 ```
 
@@ -127,8 +127,8 @@ main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
 
-  Right client1 <- QB.newClientWith manager config1
-  Right client2 <- QB.newClientWith manager config2
+  Right client1 <- QB.initQBClientWith manager config1
+  Right client2 <- QB.initQBClientWith manager config2
 
   -- Both clients share the same connection pool
   torrents1 <- client1.getTorrents Nothing
@@ -146,7 +146,7 @@ import Effectful.QBittorrent
 
 main :: IO ()
 main = do
-  client <- newClient defaultConfig
+  client <- initQBClient defaultConfig
 
   result <- runEff . runErrorNoCallStack @QBError . runQBittorrent client $ do
     login defaultConfig        -- Returns Text, throws on failure

@@ -12,7 +12,7 @@
 -- main :: IO ()
 -- main = do
 --   -- Create client (handles login automatically)
---   Right client <- QB.newClient defaultConfig
+--   Right client <- QB.initQBClient defaultConfig
 --
 --   -- Use record fields directly
 --   torrents <- client.getTorrents Nothing
@@ -29,8 +29,8 @@ module Network.QBittorrent.SimpleClient
     Client (..)
 
     -- * Client Creation
-  , newClient
-  , newClientWith
+  , initQBClient
+  , initQBClientWith
 
     -- * Re-exports
   , module Network.QBittorrent.Types
@@ -224,12 +224,12 @@ data Client = Client
 -- The session is maintained for the lifetime of the client.
 --
 -- @
--- client <- QB.newClient defaultConfig
+-- client <- QB.initQBClient defaultConfig
 -- torrents <- client.getTorrents Nothing
 -- @
-newClient :: QBConfig -> IO (Either QBError Client)
-newClient config = do
-  qbClient <- QB.newClient config
+initQBClient :: QBConfig -> IO (Either QBError Client)
+initQBClient config = do
+  qbClient <- QB.initQBClient config
   loginResult <- QB.runQB qbClient (QB.login config)
   case loginResult of
     Left err -> pure $ Left (clientErrorToQBError err)
@@ -241,9 +241,9 @@ newClient config = do
 --
 -- Use this when you want to share a manager across multiple clients
 -- or need custom manager settings.
-newClientWith :: Manager -> QBConfig -> IO (Either QBError Client)
-newClientWith manager config = do
-  qbClient <- QB.newClientWith manager config
+initQBClientWith :: Manager -> QBConfig -> IO (Either QBError Client)
+initQBClientWith manager config = do
+  qbClient <- QB.initQBClientWith manager config
   loginResult <- QB.runQB qbClient (QB.login config)
   case loginResult of
     Left err -> pure $ Left (clientErrorToQBError err)
@@ -336,8 +336,8 @@ mkClient qbc = Client
   , getPeersLog = \l -> run (QB.getPeersLog l)
 
     -- Sync
-  , syncMaindata = \r -> run (QB.syncMaindata r)
-  , syncTorrentPeers = \h r -> run (QB.syncTorrentPeers h r)
+  , syncMaindata = \rid -> run (QB.syncMaindata rid)
+  , syncTorrentPeers = \h rid -> run (QB.syncTorrentPeers h rid)
 
     -- Transfer
   , getTransferInfo = run QB.getTransferInfo
