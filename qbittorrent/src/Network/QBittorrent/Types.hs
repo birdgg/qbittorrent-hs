@@ -88,8 +88,11 @@ data QBError
 -- | Convert servant ClientError to QBError
 clientErrorToQBError :: ClientError -> QBError
 clientErrorToQBError = \case
-  FailureResponse _ Response{responseStatusCode, responseBody} ->
-    ApiError (fromEnum responseStatusCode) (T.pack $ show responseBody)
+  FailureResponse _ Response{responseStatusCode, responseBody}
+    | fromEnum responseStatusCode == 403 ->
+        AuthError "IP is banned for too many failed login attempts"
+    | otherwise ->
+        ApiError (fromEnum responseStatusCode) (T.pack $ show responseBody)
   DecodeFailure msg _ ->
     ParseError msg
   UnsupportedContentType _ _ ->
