@@ -6,8 +6,8 @@ module Network.QBittorrent.Types.Torrent
     -- * Torrent Info
   , TorrentInfo (..)
 
-    -- * Torrent Files
-  , TorrentFile (..)
+    -- * Torrent Contents
+  , TorrentContent (..)
 
     -- * Torrent Properties
   , TorrentProperties (..)
@@ -76,7 +76,7 @@ instance FromJSON TorrentInfo where
       <*> (textToTags <$> o .:? "tags" .!= "")
 
 -- | File information within a torrent
-data TorrentFile = TorrentFile
+data TorrentContent = TorrentContent
   { index :: Int
   , name :: Text
   , size :: Int64
@@ -86,9 +86,9 @@ data TorrentFile = TorrentFile
   }
   deriving stock (Show, Eq, Generic)
 
-instance FromJSON TorrentFile where
-  parseJSON = withObject "TorrentFile" $ \o ->
-    TorrentFile
+instance FromJSON TorrentContent where
+  parseJSON = withObject "TorrentContent" $ \o ->
+    TorrentContent
       <$> o .: "index"
       <*> o .: "name"
       <*> o .: "size"

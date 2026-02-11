@@ -39,7 +39,7 @@ module Network.QBittorrent.Client
   , logout
   , addTorrent
   , getTorrents
-  , getTorrentFiles
+  , getTorrentContents
   , stopTorrents
   , startTorrents
   , deleteTorrents
@@ -224,8 +224,8 @@ getTorrents mReq = case mReq of
       (fmap hashesToText req.hashes)
 
 -- | Get files within a torrent
-getTorrentFiles :: InfoHash -> ClientM [TorrentFile]
-getTorrentFiles = qbClient.torrents.files
+getTorrentContents :: InfoHash -> ClientM [TorrentContent]
+getTorrentContents = qbClient.torrents.files
 
 -- | Stop torrents by hash
 stopTorrents :: [InfoHash] -> ClientM NoContent

@@ -36,7 +36,7 @@ module Effectful.QBittorrent
     -- * Torrent Operations
   , addTorrent
   , getTorrents
-  , getTorrentFiles
+  , getTorrentContents
   , stopTorrents
   , startTorrents
   , deleteTorrents
@@ -240,11 +240,11 @@ getTorrents
 getTorrents mReq = liftQB (QB.getTorrents mReq)
 
 -- | Get files within a torrent
-getTorrentFiles
+getTorrentContents
   :: (QBittorrent :> es, IOE :> es, Error QBError :> es)
   => InfoHash
-  -> Eff es [TorrentFile]
-getTorrentFiles hash = liftQB (QB.getTorrentFiles hash)
+  -> Eff es [TorrentContent]
+getTorrentContents hash = liftQB (QB.getTorrentContents hash)
 
 -- | Stop torrents by hash
 stopTorrents

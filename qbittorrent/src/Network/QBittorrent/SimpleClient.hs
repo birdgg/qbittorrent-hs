@@ -75,7 +75,7 @@ data Client = Client
   , -- | Get torrents info (pass Nothing to get all)
     getTorrents :: Maybe TorrentInfoRequest -> IO (Either QBError [TorrentInfo])
   , -- | Get files within a torrent
-    getTorrentFiles :: InfoHash -> IO (Either QBError [TorrentFile])
+    getTorrentContents :: InfoHash -> IO (Either QBError [TorrentContent])
   , -- | Stop torrents by hash
     stopTorrents :: [InfoHash] -> IO (Either QBError ())
   , -- | Start torrents by hash
@@ -268,7 +268,7 @@ mkClient qbc = Client
     -- Torrent Operations
   , addTorrent = \req -> run (QB.addTorrent req)
   , getTorrents = \mReq -> run (QB.getTorrents mReq)
-  , getTorrentFiles = \h -> run (QB.getTorrentFiles h)
+  , getTorrentContents = \h -> run (QB.getTorrentContents h)
   , stopTorrents = \hs -> runUnit (QB.stopTorrents hs)
   , startTorrents = \hs -> runUnit (QB.startTorrents hs)
   , deleteTorrents = \hs df -> runUnit (QB.deleteTorrents hs df)

@@ -54,7 +54,7 @@ data TorrentsRoutes mode = TorrentsRoutes
       :: mode
         :- "files"
           :> QueryParam' '[Required, Strict] "hash" InfoHash
-          :> Get '[JSON] [TorrentFile]
+          :> Get '[JSON] [TorrentContent]
   , stop
       :: mode
         :- "stop"
