@@ -27,6 +27,9 @@ module Network.QBittorrent.Types
 import Control.Concurrent.STM (TVar)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Text.Encoding.Error (lenientDecode)
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as TLE
 import GHC.Generics (Generic)
 import Network.HTTP.Client (CookieJar)
 import Servant.Client (ClientEnv, ClientError (..))
@@ -92,7 +95,7 @@ clientErrorToQBError = \case
     | fromEnum responseStatusCode == 403 ->
         AuthError "IP is banned for too many failed login attempts"
     | otherwise ->
-        ApiError (fromEnum responseStatusCode) (T.pack $ show responseBody)
+        ApiError (fromEnum responseStatusCode) (TL.toStrict $ TLE.decodeUtf8With lenientDecode responseBody)
   DecodeFailure msg _ ->
     ParseError msg
   UnsupportedContentType _ _ ->
