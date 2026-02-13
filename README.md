@@ -27,7 +27,7 @@ build-depends: effectful-qbittorrent
 
 ### Simple Client (Recommended)
 
-The simplest way to use the library. Provides a record-based API with `IO (Either QBError a)` return types and automatic session management:
+The simplest way to use the library. Provides a record-based API with `IO (Either QBClientError a)` return types and automatic session management:
 
 ```haskell
 import Network.QBittorrent.SimpleClient qualified as QB
@@ -138,7 +138,7 @@ main = do
 
 ### With Effectful
 
-Use the `effectful-qbittorrent` package for effectful integration. Errors are handled via the `Error QBError` effect, enabling clean do-notation without explicit `Either` handling:
+Use the `effectful-qbittorrent` package for effectful integration. Errors are handled via the `Error QBClientError` effect, enabling clean do-notation without explicit `Either` handling:
 
 ```haskell
 import Effectful
@@ -148,7 +148,7 @@ main :: IO ()
 main = do
   client <- initQBClient defaultConfig
 
-  result <- runEff . runErrorNoCallStack @QBError . runQBittorrent client $ do
+  result <- runEff . runErrorNoCallStack @QBClientError . runQBittorrent client $ do
     login defaultConfig        -- Returns Text, throws on failure
     getTorrents Nothing        -- Returns [TorrentInfo]
 
@@ -160,12 +160,12 @@ main = do
 For more control over error handling, use `catchError`:
 
 ```haskell
-myApp :: (QBittorrent :> es, Error QBError :> es, IOE :> es) => Eff es [TorrentInfo]
+myApp :: (QBittorrent :> es, Error QBClientError :> es, IOE :> es) => Eff es [TorrentInfo]
 myApp = do
   login defaultConfig `catchError` \_ err ->
     case err of
-      AuthError _ -> login fallbackConfig  -- Retry with fallback
-      _           -> throwError err        -- Re-throw other errors
+      QBApiError e | e.statusCode == 403 -> login fallbackConfig  -- Retry on auth failure
+      _ -> throwError err                                         -- Re-throw other errors
   getTorrents Nothing
 ```
 

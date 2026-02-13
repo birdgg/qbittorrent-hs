@@ -8,8 +8,9 @@ module Network.QBittorrent.Types
   , QBClient (..)
 
     -- * Errors
-  , QBError (..)
-  , clientErrorToQBError
+  , QBClientError (..)
+  , QBResponseError (..)
+  , clientErrorToQBClientError
 
     -- * Re-exports
   , module Network.QBittorrent.Types.App
@@ -25,8 +26,8 @@ module Network.QBittorrent.Types
   ) where
 
 import Control.Concurrent.STM (TVar)
+import Control.Exception (Exception)
 import Data.Text (Text)
-import Data.Text qualified as T
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLE
@@ -74,33 +75,42 @@ data QBClient = QBClient
   , config :: QBConfig
   }
 
+-- | API response error from qBittorrent
+--
+-- Represents errors returned by the qBittorrent Web API with
+-- structured status code and response body information.
+data QBResponseError = QBResponseError
+  { statusCode :: Int
+  , responseBody :: Text
+  }
+  deriving stock (Show, Eq, Generic)
+
 -- | Errors that can occur during qBittorrent API operations
-data QBError
-  = -- | Network request failed
-    NetworkError Text
-  | -- | Authentication failed
-    AuthError Text
-  | -- | API returned an error status (status code, message)
-    ApiError Int Text
-  | -- | Failed to parse JSON response
-    ParseError Text
-  | -- | Invalid torrent provided
-    InvalidTorrent Text
+--
+-- This type distinguishes between:
+--
+-- * Network-level errors from servant-client ('ServantError')
+-- * API-level errors from qBittorrent ('QBApiError')
+data QBClientError
+  = -- | Network/HTTP error from servant-client
+    ServantError ClientError
+  | -- | API returned an error response
+    QBApiError QBResponseError
   deriving stock (Show, Eq)
 
--- | Convert servant ClientError to QBError
-clientErrorToQBError :: ClientError -> QBError
-clientErrorToQBError = \case
-  FailureResponse _ Response{responseStatusCode, responseBody}
-    | fromEnum responseStatusCode == 403 ->
-        AuthError "IP is banned for too many failed login attempts"
-    | otherwise ->
-        ApiError (fromEnum responseStatusCode) (TL.toStrict $ TLE.decodeUtf8With lenientDecode responseBody)
-  DecodeFailure msg _ ->
-    ParseError msg
-  UnsupportedContentType _ _ ->
-    ParseError "Unsupported content type"
-  InvalidContentTypeHeader _ ->
-    ParseError "Invalid content type header"
-  ConnectionError ex ->
-    NetworkError (T.pack $ show ex)
+instance Exception QBClientError
+
+-- | Convert servant ClientError to QBClientError
+--
+-- HTTP failure responses become 'QBApiError' with structured status code
+-- and response body. All other errors (connection, decode, content type)
+-- are preserved as 'ServantError'.
+clientErrorToQBClientError :: ClientError -> QBClientError
+clientErrorToQBClientError err = case err of
+  FailureResponse _ Response{responseStatusCode, responseBody} ->
+    QBApiError
+      QBResponseError
+        { statusCode = fromEnum responseStatusCode
+        , responseBody = TL.toStrict $ TLE.decodeUtf8With lenientDecode responseBody
+        }
+  _ -> ServantError err

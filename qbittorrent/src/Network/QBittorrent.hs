@@ -6,7 +6,7 @@
 -- = Quick Start (Simple Client)
 --
 -- For the simplest usage, use "Network.QBittorrent.SimpleClient" which provides
--- a record-based API with @IO (Either QBError a)@ return types:
+-- a record-based API with @IO (Either QBClientError a)@ return types:
 --
 -- @
 -- import Network.QBittorrent.SimpleClient

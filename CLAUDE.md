@@ -45,8 +45,8 @@ Haskell client library for the qBittorrent 5.0 Web API using servant-client.
 - `Network.QBittorrent` - Main entry point, re-exports Client and API
 - `Network.QBittorrent.API` - Servant API type definitions using `NamedRoutes`
 - `Network.QBittorrent.Client` - `QBClient`, `newClient`, `runQB`, and `ClientM` API functions
-- `Network.QBittorrent.SimpleClient` - Record-based API with `IO (Either QBError a)` return types
-- `Network.QBittorrent.Types` - Core types (`QBConfig`, `QBError`)
+- `Network.QBittorrent.SimpleClient` - Record-based API with `IO (Either QBClientError a)` return types
+- `Network.QBittorrent.Types` - Core types (`QBConfig`, `QBClientError`, `QBResponseError`)
 - `Network.QBittorrent.Types.*` - Domain types (Torrent, Filter, Form, Sync)
 
 ### effectful-qbittorrent
