@@ -50,14 +50,65 @@ data TorrentInfoRequest = TorrentInfoRequest
 
 -- | Torrent information from qBittorrent
 data TorrentInfo = TorrentInfo
-  { hash :: InfoHash
+  { -- Identification
+    hash :: InfoHash
   , name :: Text
+  , magnetUri :: Text
+    -- State & Progress
   , state :: TorrentState
   , progress :: Double
-  , savePath :: Text
-  , size :: Int64
-  , downloaded :: Int64
   , eta :: Int64
+  , size :: Int64
+  , totalSize :: Int64
+  , completed :: Int64
+  , amountLeft :: Int64
+  , availability :: Double
+    -- Paths
+  , savePath :: Text
+  , contentPath :: Text
+    -- Timestamps
+  , addedOn :: Int64
+  , completionOn :: Int64
+  , lastActivity :: Int64
+  , seenComplete :: Int64
+  , timeActive :: Int64
+    -- Download stats
+  , downloaded :: Int64
+  , downloadedSession :: Int64
+  , dlspeed :: Int64
+    -- Upload stats
+  , uploaded :: Int64
+  , uploadedSession :: Int64
+  , upspeed :: Int64
+    -- Ratio & Seeding
+  , ratio :: Double
+  , ratioLimit :: Double
+  , maxRatio :: Double
+  , seedingTime :: Int64
+  , seedingTimeLimit :: Int64
+  , maxSeedingTime :: Int64
+    -- Speed limits
+  , dlLimit :: Int64
+  , upLimit :: Int64
+    -- Peers / Swarm
+  , numSeeds :: Int64
+  , numComplete :: Int64
+  , numLeechs :: Int64
+  , numIncomplete :: Int64
+    -- Queue
+  , priority :: Int64
+    -- Boolean flags
+  , autoTmm :: Bool
+  , flPiecePrio :: Bool
+  , forceStart :: Bool
+  , seqDl :: Bool
+  , superSeeding :: Bool
+  , isPrivate :: Bool
+    -- Tracker
+  , tracker :: Text
+  , reannounce :: Int64
+    -- Metadata
+  , category :: Text
   , tags :: [Tag]
   }
   deriving stock (Show, Eq, Generic)
@@ -65,14 +116,65 @@ data TorrentInfo = TorrentInfo
 instance FromJSON TorrentInfo where
   parseJSON = withObject "TorrentInfo" $ \o ->
     TorrentInfo
+      -- Identification
       <$> o .: "hash"
       <*> o .: "name"
+      <*> o .:? "magnet_uri" .!= ""
+      -- State & Progress
       <*> o .: "state"
       <*> o .: "progress"
-      <*> o .: "save_path"
-      <*> o .: "size"
-      <*> o .: "downloaded"
       <*> o .: "eta"
+      <*> o .: "size"
+      <*> o .: "total_size"
+      <*> o .: "completed"
+      <*> o .: "amount_left"
+      <*> o .: "availability"
+      -- Paths
+      <*> o .: "save_path"
+      <*> o .: "content_path"
+      -- Timestamps
+      <*> o .: "added_on"
+      <*> o .: "completion_on"
+      <*> o .: "last_activity"
+      <*> o .: "seen_complete"
+      <*> o .: "time_active"
+      -- Download stats
+      <*> o .: "downloaded"
+      <*> o .: "downloaded_session"
+      <*> o .: "dlspeed"
+      -- Upload stats
+      <*> o .: "uploaded"
+      <*> o .: "uploaded_session"
+      <*> o .: "upspeed"
+      -- Ratio & Seeding
+      <*> o .: "ratio"
+      <*> o .: "ratio_limit"
+      <*> o .: "max_ratio"
+      <*> o .: "seeding_time"
+      <*> o .: "seeding_time_limit"
+      <*> o .: "max_seeding_time"
+      -- Speed limits
+      <*> o .: "dl_limit"
+      <*> o .: "up_limit"
+      -- Peers / Swarm
+      <*> o .: "num_seeds"
+      <*> o .: "num_complete"
+      <*> o .: "num_leechs"
+      <*> o .: "num_incomplete"
+      -- Queue
+      <*> o .: "priority"
+      -- Boolean flags
+      <*> o .: "auto_tmm"
+      <*> o .: "f_l_piece_prio"
+      <*> o .: "force_start"
+      <*> o .: "seq_dl"
+      <*> o .: "super_seeding"
+      <*> o .:? "isPrivate" .!= False
+      -- Tracker
+      <*> o .: "tracker"
+      <*> o .: "reannounce"
+      -- Metadata
+      <*> o .:? "category" .!= ""
       <*> (textToTags <$> o .:? "tags" .!= "")
 
 -- | File information within a torrent
