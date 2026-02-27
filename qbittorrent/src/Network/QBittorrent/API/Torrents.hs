@@ -143,7 +143,7 @@ data TorrentsRoutes mode = TorrentsRoutes
   , -- Limit settings
     setFilePrio
       :: mode
-        :- "setFilePrio"
+        :- "filePrio"
           :> ReqBody '[FormUrlEncoded] FilePrioForm
           :> Post '[PlainText] NoContent
   , setDownloadLimit
