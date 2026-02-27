@@ -241,7 +241,7 @@ startTorrents hashes = qbClient.torrents.start (HashesForm hashes)
 deleteTorrents :: [InfoHash] -> Bool -> ClientM NoContent
 deleteTorrents hashes deleteFiles_ =
   qbClient.torrents.delete
-    (DeleteTorrentsForm hashes (if deleteFiles_ then "true" else "false"))
+    (DeleteTorrentsForm hashes deleteFiles_)
 
 -- | Add tags to torrents
 addTags :: [InfoHash] -> [Tag] -> ClientM NoContent

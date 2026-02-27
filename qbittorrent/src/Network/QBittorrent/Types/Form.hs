@@ -57,7 +57,7 @@ instance ToForm HashesForm where
 -- | Delete torrents form
 data DeleteTorrentsForm = DeleteTorrentsForm
   { hashes :: [InfoHash]
-  , deleteFiles :: Text -- "true" or "false"
+  , deleteFiles :: Bool
   }
   deriving stock (Show, Eq, Generic)
 
@@ -66,7 +66,7 @@ instance ToForm DeleteTorrentsForm where
     Form $
       Map.fromList
         [ ("hashes", [hashesToText form.hashes])
-        , ("deleteFiles", [form.deleteFiles])
+        , ("deleteFiles", [if form.deleteFiles then "true" else "false"])
         ]
 
 -- | Tags form
