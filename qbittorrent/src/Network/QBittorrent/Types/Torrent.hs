@@ -422,3 +422,25 @@ instance FromJSON TorrentState where
     "checkingResumeData" -> pure CheckingResumeData
     "moving"             -> pure Moving
     _                    -> pure StateUnknown
+
+instance ToJSON TorrentState where
+  toJSON = \case
+    StateError         -> String "error"
+    MissingFiles       -> String "missingFiles"
+    Uploading          -> String "uploading"
+    PausedUP           -> String "pausedUP"
+    QueuedUP           -> String "queuedUP"
+    StalledUP          -> String "stalledUP"
+    CheckingUP         -> String "checkingUP"
+    ForcedUP           -> String "forcedUP"
+    Allocating         -> String "allocating"
+    Downloading        -> String "downloading"
+    MetaDL             -> String "metaDL"
+    PausedDL           -> String "pausedDL"
+    QueuedDL           -> String "queuedDL"
+    StalledDL          -> String "stalledDL"
+    CheckingDL         -> String "checkingDL"
+    ForcedDL           -> String "forcedDL"
+    CheckingResumeData -> String "checkingResumeData"
+    Moving             -> String "moving"
+    StateUnknown       -> String "unknown"
