@@ -383,7 +383,8 @@ data TorrentState
   = StateError          -- ^ error
   | MissingFiles        -- ^ missingFiles
   | Uploading           -- ^ uploading
-  | PausedUP            -- ^ pausedUP
+  | PausedUP            -- ^ pausedUP (qBittorrent 4.x)
+  | StoppedUP           -- ^ stoppedUP (qBittorrent 5.0+)
   | QueuedUP            -- ^ queuedUP
   | StalledUP           -- ^ stalledUP
   | CheckingUP          -- ^ checkingUP
@@ -391,7 +392,8 @@ data TorrentState
   | Allocating          -- ^ allocating
   | Downloading         -- ^ downloading
   | MetaDL              -- ^ metaDL
-  | PausedDL            -- ^ pausedDL
+  | PausedDL            -- ^ pausedDL (qBittorrent 4.x)
+  | StoppedDL           -- ^ stoppedDL (qBittorrent 5.0+)
   | QueuedDL            -- ^ queuedDL
   | StalledDL           -- ^ stalledDL
   | CheckingDL          -- ^ checkingDL
@@ -407,6 +409,7 @@ instance FromJSON TorrentState where
     "missingFiles"       -> pure MissingFiles
     "uploading"          -> pure Uploading
     "pausedUP"           -> pure PausedUP
+    "stoppedUP"          -> pure StoppedUP
     "queuedUP"           -> pure QueuedUP
     "stalledUP"          -> pure StalledUP
     "checkingUP"         -> pure CheckingUP
@@ -415,6 +418,7 @@ instance FromJSON TorrentState where
     "downloading"        -> pure Downloading
     "metaDL"             -> pure MetaDL
     "pausedDL"           -> pure PausedDL
+    "stoppedDL"          -> pure StoppedDL
     "queuedDL"           -> pure QueuedDL
     "stalledDL"          -> pure StalledDL
     "checkingDL"         -> pure CheckingDL
@@ -429,6 +433,7 @@ instance ToJSON TorrentState where
     MissingFiles       -> String "missingFiles"
     Uploading          -> String "uploading"
     PausedUP           -> String "pausedUP"
+    StoppedUP          -> String "stoppedUP"
     QueuedUP           -> String "queuedUP"
     StalledUP          -> String "stalledUP"
     CheckingUP         -> String "checkingUP"
@@ -437,6 +442,7 @@ instance ToJSON TorrentState where
     Downloading        -> String "downloading"
     MetaDL             -> String "metaDL"
     PausedDL           -> String "pausedDL"
+    StoppedDL          -> String "stoppedDL"
     QueuedDL           -> String "queuedDL"
     StalledDL          -> String "stalledDL"
     CheckingDL         -> String "checkingDL"

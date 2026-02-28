@@ -75,3 +75,17 @@ library
     OverloadedRecordDot
     OverloadedStrings
     TypeFamilies
+
+test-suite qbittorrent-test
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test
+  build-depends:
+    base >=4.21 && <5,
+    qbittorrent,
+    hspec >=2.11
+  default-language: GHC2021
+  default-extensions:
+    OverloadedStrings
+    OverloadedRecordDot
+  ghc-options: -Wall
