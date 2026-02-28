@@ -1,4 +1,3 @@
--- | Sync API types for qBittorrent
 module Network.QBittorrent.Types.Sync
   ( SyncMainData (..)
   , SyncTorrentInfo (..)

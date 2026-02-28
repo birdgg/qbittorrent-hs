@@ -1,4 +1,3 @@
--- | Transfer types for qBittorrent API
 module Network.QBittorrent.Types.Transfer
   ( TransferInfo (..)
   ) where

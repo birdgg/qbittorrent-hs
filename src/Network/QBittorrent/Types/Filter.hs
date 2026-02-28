@@ -1,4 +1,3 @@
--- | Torrent filter types for qBittorrent API
 module Network.QBittorrent.Types.Filter
   ( TorrentFilter (..)
   , torrentFilterToText
@@ -8,7 +7,6 @@ import Data.Aeson (ToJSON (..), Value (..))
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
--- | Torrent state filter for qBittorrent 5.0+
 data TorrentFilter
   = FilterAll
   | FilterDownloading

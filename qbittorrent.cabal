@@ -35,7 +35,7 @@ library
     Network.QBittorrent.SimpleClient
     Network.QBittorrent.Types
     Network.QBittorrent.Types.App
-    Network.QBittorrent.Types.Credential
+    Network.QBittorrent.Types.Auth
     Network.QBittorrent.Types.Filter
     Network.QBittorrent.Types.Form
     Network.QBittorrent.Types.InfoHash

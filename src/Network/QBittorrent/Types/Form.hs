@@ -1,4 +1,3 @@
--- | Form types for qBittorrent API (servant-client)
 module Network.QBittorrent.Types.Form
   ( LoginForm (..)
   , HashesForm (..)

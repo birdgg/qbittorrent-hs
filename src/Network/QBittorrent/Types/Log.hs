@@ -1,4 +1,3 @@
--- | Log types for qBittorrent API
 module Network.QBittorrent.Types.Log
   ( -- * Log Entry
     LogEntry (..)

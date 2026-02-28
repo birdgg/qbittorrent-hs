@@ -1,5 +1,5 @@
 -- | Credential type for type-safe credential handling in qBittorrent API
-module Network.QBittorrent.Types.Credential
+module Network.QBittorrent.Types.Auth
   ( Credential (..)
   ) where
 

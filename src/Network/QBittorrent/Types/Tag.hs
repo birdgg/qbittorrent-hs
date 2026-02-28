@@ -1,4 +1,3 @@
--- | Tag newtype for type-safe tag handling in qBittorrent API
 module Network.QBittorrent.Types.Tag
   ( Tag (..)
   , tagsToText

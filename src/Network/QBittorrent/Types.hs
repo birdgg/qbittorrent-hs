@@ -14,7 +14,7 @@ module Network.QBittorrent.Types
 
     -- * Re-exports
   , module Network.QBittorrent.Types.App
-  , module Network.QBittorrent.Types.Credential
+  , module Network.QBittorrent.Types.Auth
   , module Network.QBittorrent.Types.Filter
   , module Network.QBittorrent.Types.Form
   , module Network.QBittorrent.Types.InfoHash
@@ -36,7 +36,7 @@ import Network.HTTP.Client (CookieJar)
 import Servant.Client (ClientEnv, ClientError (..))
 import Servant.Client.Core (ResponseF (..))
 import Network.QBittorrent.Types.App
-import Network.QBittorrent.Types.Credential
+import Network.QBittorrent.Types.Auth
 import Network.QBittorrent.Types.Filter
 import Network.QBittorrent.Types.Form
 import Network.QBittorrent.Types.InfoHash
