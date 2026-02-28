@@ -4,23 +4,10 @@ Haskell client library for the qBittorrent Web API.
 
 **Requires qBittorrent 5.0 or later.** This library does not support qBittorrent 4.x.
 
-## Packages
-
-This repository contains two packages:
-
-| Package | Description |
-|---------|-------------|
-| [`qbittorrent`](./qbittorrent/) | Core library with servant-client bindings |
-| [`effectful-qbittorrent`](./effectful-qbittorrent/) | [Effectful](https://hackage.haskell.org/package/effectful) integration |
-
 ## Installation
 
 ```cabal
--- Core library (for ClientM or SimpleClient)
 build-depends: qbittorrent
-
--- With Effectful support (includes qbittorrent types)
-build-depends: effectful-qbittorrent
 ```
 
 ## Quick Start
@@ -136,147 +123,114 @@ main = do
   print (torrents1, torrents2)
 ```
 
-### With Effectful
-
-Use the `effectful-qbittorrent` package for effectful integration. Errors are handled via the `Error QBClientError` effect, enabling clean do-notation without explicit `Either` handling:
-
-```haskell
-import Effectful
-import Effectful.QBittorrent
-
-main :: IO ()
-main = do
-  client <- initQBClient defaultConfig
-
-  result <- runEff . runErrorNoCallStack @QBClientError . runQBittorrent client $ do
-    login defaultConfig        -- Returns Text, throws on failure
-    getTorrents Nothing        -- Returns [TorrentInfo]
-
-  case result of
-    Left err -> print err
-    Right torrents -> print torrents
-```
-
-For more control over error handling, use `catchError`:
-
-```haskell
-myApp :: (QBittorrent :> es, Error QBClientError :> es, IOE :> es) => Eff es [TorrentInfo]
-myApp = do
-  login defaultConfig `catchError` \_ err ->
-    case err of
-      QBApiError e | e.statusCode == 403 -> login fallbackConfig  -- Retry on auth failure
-      _ -> throwError err                                         -- Re-throw other errors
-  getTorrents Nothing
-```
-
 ## API Coverage
 
-### Authentication API ✅ (2/2)
+### Authentication API (2/2)
 
 | Endpoint | Status |
 |----------|--------|
-| `login` | ✅ |
-| `logout` | ✅ |
+| `login` | Done |
+| `logout` | Done |
 
-### Application API ✅ (9/9)
-
-| Endpoint | Status |
-|----------|--------|
-| `version` | ✅ |
-| `webapiVersion` | ✅ |
-| `buildInfo` | ✅ |
-| `shutdown` | ✅ |
-| `preferences` | ✅ |
-| `setPreferences` | ✅ |
-| `defaultSavePath` | ✅ |
-| `networkInterfaceList` | ✅ |
-| `networkInterfaceAddressList` | ✅ |
-
-### Torrents API ✅ (47/47)
+### Application API (9/9)
 
 | Endpoint | Status |
 |----------|--------|
-| `info` | ✅ |
-| `properties` | ✅ |
-| `trackers` | ✅ |
-| `webseeds` | ✅ |
-| `files` | ✅ |
-| `pieceStates` | ✅ |
-| `pieceHashes` | ✅ |
-| `add` | ✅ |
-| `stop` | ✅ |
-| `start` | ✅ |
-| `delete` | ✅ |
-| `recheck` | ✅ |
-| `reannounce` | ✅ |
-| `increasePrio` | ✅ |
-| `decreasePrio` | ✅ |
-| `topPrio` | ✅ |
-| `bottomPrio` | ✅ |
-| `setFilePrio` | ✅ |
-| `setDownloadLimit` | ✅ |
-| `setUploadLimit` | ✅ |
-| `setShareLimits` | ✅ |
-| `setSuperSeeding` | ✅ |
-| `setForceStart` | ✅ |
-| `setAutoManagement` | ✅ |
-| `toggleSequentialDownload` | ✅ |
-| `toggleFirstLastPiecePrio` | ✅ |
-| `setCategory` | ✅ |
-| `categories` | ✅ |
-| `createCategory` | ✅ |
-| `editCategory` | ✅ |
-| `removeCategories` | ✅ |
-| `tags` | ✅ |
-| `addTags` | ✅ |
-| `removeTags` | ✅ |
-| `createTags` | ✅ |
-| `deleteTags` | ✅ |
-| `addTrackers` | ✅ |
-| `editTracker` | ✅ |
-| `removeTrackers` | ✅ |
-| `addPeers` | ✅ |
-| `rename` | ✅ |
-| `renameFile` | ✅ |
-| `renameFolder` | ✅ |
-| `setLocation` | ✅ |
-| `export` | ✅ |
-| `count` | ✅ |
-| `downloadLimit` (get) | ✅ |
-| `uploadLimit` (get) | ✅ |
+| `version` | Done |
+| `webapiVersion` | Done |
+| `buildInfo` | Done |
+| `shutdown` | Done |
+| `preferences` | Done |
+| `setPreferences` | Done |
+| `defaultSavePath` | Done |
+| `networkInterfaceList` | Done |
+| `networkInterfaceAddressList` | Done |
 
-### Sync API ✅ (2/2)
+### Torrents API (47/47)
 
 | Endpoint | Status |
 |----------|--------|
-| `maindata` | ✅ |
-| `torrentPeers` | ✅ |
+| `info` | Done |
+| `properties` | Done |
+| `trackers` | Done |
+| `webseeds` | Done |
+| `files` | Done |
+| `pieceStates` | Done |
+| `pieceHashes` | Done |
+| `add` | Done |
+| `stop` | Done |
+| `start` | Done |
+| `delete` | Done |
+| `recheck` | Done |
+| `reannounce` | Done |
+| `increasePrio` | Done |
+| `decreasePrio` | Done |
+| `topPrio` | Done |
+| `bottomPrio` | Done |
+| `setFilePrio` | Done |
+| `setDownloadLimit` | Done |
+| `setUploadLimit` | Done |
+| `setShareLimits` | Done |
+| `setSuperSeeding` | Done |
+| `setForceStart` | Done |
+| `setAutoManagement` | Done |
+| `toggleSequentialDownload` | Done |
+| `toggleFirstLastPiecePrio` | Done |
+| `setCategory` | Done |
+| `categories` | Done |
+| `createCategory` | Done |
+| `editCategory` | Done |
+| `removeCategories` | Done |
+| `tags` | Done |
+| `addTags` | Done |
+| `removeTags` | Done |
+| `createTags` | Done |
+| `deleteTags` | Done |
+| `addTrackers` | Done |
+| `editTracker` | Done |
+| `removeTrackers` | Done |
+| `addPeers` | Done |
+| `rename` | Done |
+| `renameFile` | Done |
+| `renameFolder` | Done |
+| `setLocation` | Done |
+| `export` | Done |
+| `count` | Done |
+| `downloadLimit` (get) | Done |
+| `uploadLimit` (get) | Done |
 
-### Log API ✅ (2/2)
+### Sync API (2/2)
 
 | Endpoint | Status |
 |----------|--------|
-| `main` | ✅ |
-| `peers` | ✅ |
+| `maindata` | Done |
+| `torrentPeers` | Done |
 
-### Transfer API ✅ (8/8)
+### Log API (2/2)
 
 | Endpoint | Status |
 |----------|--------|
-| `info` | ✅ |
-| `speedLimitsMode` | ✅ |
-| `toggleSpeedLimitsMode` | ✅ |
-| `downloadLimit` | ✅ |
-| `setDownloadLimit` | ✅ |
-| `uploadLimit` | ✅ |
-| `setUploadLimit` | ✅ |
-| `banPeers` | ✅ |
+| `main` | Done |
+| `peers` | Done |
 
-### RSS API ❌
+### Transfer API (8/8)
+
+| Endpoint | Status |
+|----------|--------|
+| `info` | Done |
+| `speedLimitsMode` | Done |
+| `toggleSpeedLimitsMode` | Done |
+| `downloadLimit` | Done |
+| `setDownloadLimit` | Done |
+| `uploadLimit` | Done |
+| `setUploadLimit` | Done |
+| `banPeers` | Done |
+
+### RSS API
 
 Not implemented.
 
-### Search API ❌
+### Search API
 
 Not implemented.
 

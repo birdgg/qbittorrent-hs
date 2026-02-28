@@ -1,5 +1,4 @@
 packages:
-  qbittorrent/
-  effectful-qbittorrent/
+  .
 
 allow-newer: all
